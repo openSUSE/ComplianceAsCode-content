@@ -19,7 +19,7 @@ rationale: |-
     forensic analysis and investigating system events. Sources outside the
     configured acceptable allowance (drift) may be inaccurate.
 
-severity: unknown
+severity: medium
 
 identifiers:
     cce@rhel7: 80439-3
