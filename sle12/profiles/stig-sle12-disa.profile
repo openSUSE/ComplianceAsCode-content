@@ -70,6 +70,7 @@ selections:
      - file_permissions_sshd_pub_key
      - file_permissions_sshd_private_key
      - sshd_enable_strictmodes
+     - var_sshd_priv_separation=yes
      - sshd_use_priv_separation
      - sshd_disable_compression
      - sshd_enable_x11_forwarding
