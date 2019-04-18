@@ -53,11 +53,7 @@ and configurations.</description>
   </ind:textfilecontent54_test>
   <ind:textfilecontent54_object id="obj_sshd_enable_strictmodes" version="1">
     <ind:filepath>/etc/ssh/sshd_config</ind:filepath>
-{{% if product in ['opensuse', 'sle11', 'sle12'] %}}
     <ind:pattern operation="pattern match">^[\s]*(?i)StrictModes(?-i)[\s]+yes[\s]*(?:|(?:#.*))?$</ind:pattern>
-{{% else %}}
-    <ind:pattern operation="pattern match">^[\s]*(?i)StrictModes(?-i)[\s]+no[\s]*(?:|(?:#.*))?$</ind:pattern>
-{{% endif %}}
     <ind:instance datatype="int">1</ind:instance>
   </ind:textfilecontent54_object>
 </def-group>
