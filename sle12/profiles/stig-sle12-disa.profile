@@ -62,7 +62,9 @@ selections:
      - sshd_do_not_permit_user_env
      - sshd_use_approved_ciphers
      - sshd_use_approved_macs
+     - sshd_idle_timeout_value=10_minutes
      - sshd_set_idle_timeout
+     - var_sshd_set_keepalive=1
      - sshd_set_keepalive
      - sshd_disable_user_known_hosts
      - file_permissions_sshd_pub_key
