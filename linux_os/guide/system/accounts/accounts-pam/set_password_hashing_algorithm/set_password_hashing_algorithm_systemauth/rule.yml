@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
 title: "Set PAM's Password Hashing Algorithm"
 
@@ -45,7 +45,7 @@ severity: medium
 
 identifiers:
     cce@rhel6: 26303-8
-    cce@rhel7: 27104-9
+    cce@rhel7: 82043-1
     cce@rhel8: 80893-1
 
 references:

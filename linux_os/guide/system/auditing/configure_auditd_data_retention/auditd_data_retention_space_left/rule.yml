@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,rhv4,sle12
 
 title: 'Configure auditd space_left on Low Disk Space'
 

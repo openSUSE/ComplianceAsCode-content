@@ -47,6 +47,11 @@
             <!-- the check references an OVAL file that contains an inventory definition -->
             <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5" href="filename">installed_env_is_a_machine</check>
       </cpe-item>
+      <cpe-item name="cpe:/a:gdm">
+            <title xml:lang="en-us">Package gdm is installed</title>
+            <!-- the check references an OVAL file that contains an inventory definition -->
+            <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5" href="filename">installed_env_has_gdm_package</check>
+      </cpe-item>
       <cpe-item name="cpe:/a:libuser">
             <title xml:lang="en-us">Package libuser is installed</title>
             <!-- the check references an OVAL file that contains an inventory definition -->
@@ -66,6 +71,11 @@
             <title xml:lang="en-us">Package shadow-utils is installed</title>
             <!-- the check references an OVAL file that contains an inventory definition -->
             <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5" href="filename">installed_env_has_shadow-utils_package</check>
+      </cpe-item>
+      <cpe-item name="cpe:/a:sssd">
+            <title xml:lang="en-us">Package sssd-common is installed</title>
+            <!-- the check references an OVAL file that contains an inventory definition -->
+            <check system="http://oval.mitre.org/XMLSchema/oval-definitions-5" href="filename">installed_env_has_sssd-common_package</check>
       </cpe-item>
       <cpe-item name="cpe:/a:systemd">
             <title xml:lang="en-us">Package systemd is installed</title>

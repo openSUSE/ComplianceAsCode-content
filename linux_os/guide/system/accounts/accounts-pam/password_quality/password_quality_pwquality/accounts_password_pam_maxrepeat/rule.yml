@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8,fedora,ol7,ol8,rhv4
+prodtype: wrlinux1019,rhel7,rhel8,fedora,ol7,ol8,rhv4
 
 title: 'Set Password Maximum Consecutive Repeating Characters'
 
@@ -25,7 +25,8 @@ rationale: |-
 severity: medium
 
 identifiers:
-    cce@rhel7: 27333-4
+    cce@rhel7: 82055-5
+    cce@rhel8: 82066-2
 
 references:
     disa: "195"
@@ -46,3 +47,5 @@ ocil: |-
     <pre>$ grep maxrepeat /etc/security/pwquality.conf</pre>
     Look for the value of the <tt>maxrepeat</tt> parameter. The DoD requirement is 3, which would appear as
     <tt>maxrepeat=3</tt>.
+
+platform: pam

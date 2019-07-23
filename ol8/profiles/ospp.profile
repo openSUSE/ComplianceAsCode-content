@@ -41,8 +41,13 @@ selections:
     - sysctl_kernel_yama_ptrace_scope
     - sysctl_kernel_kptr_restrict
     - sysctl_kernel_kexec_load_disabled
+    - sysctl_user_max_user_namespaces
     - sysctl_kernel_dmesg_restrict
-    - dconf_use_text_backend
+    - sysctl_kernel_perf_event_paranoid
+    - sysctl_kernel_unprivileged_bpf_disabled
+    - sysctl_net_core_bpf_jit_harden
+    - sysctl_kernel_core_pattern
+    - dconf_db_up_to_date
     - dconf_gnome_screensaver_idle_activation_enabled
     - dconf_gnome_screensaver_idle_delay
     - dconf_gnome_screensaver_lock_delay
@@ -59,6 +64,7 @@ selections:
     - grub2_slub_debug_argument
     - grub2_page_poison_argument
     - grub2_vsyscall_argument
+    - grub2_pti_argument
     - no_empty_passwords
     - require_singleuser_auth
     - service_debug-shell_disabled
@@ -66,13 +72,10 @@ selections:
     - sshd_disable_root_login
     - gnome_gdm_disable_automatic_login
     - gnome_gdm_disable_guest_login
-    - sssd_offline_cred_expiration
-    - sssd_memcache_timeout
-    - var_sssd_memcache_timeout=1_day
+    - sssd_run_as_sssd_user
     - disable_host_auth
     - sshd_disable_gssapi_auth
     - sshd_disable_kerb_auth
-    - sshd_disable_rhosts_rsa
     - sshd_disable_rhosts
     - sshd_disable_user_known_hosts
     - var_accounts_passwords_pam_faillock_deny=3
@@ -192,6 +195,7 @@ selections:
     - audit_rules_kernel_module_loading_insmod
     - audit_rules_kernel_module_loading_modprobe
     - audit_rules_kernel_module_loading_rmmod
+    - security_patches_up_to_date
     - audit_rules_etc_passwd_open
     - audit_rules_etc_passwd_openat
     - audit_rules_etc_passwd_open_by_handle_at
@@ -199,7 +203,6 @@ selections:
     - audit_rules_etc_group_openat
     - audit_rules_etc_group_open_by_handle_at
     - package_abrt_removed
-    - package_sendmail_removed
     - mount_option_dev_shm_nodev
     - mount_option_dev_shm_noexec
     - mount_option_dev_shm_nosuid
@@ -210,3 +213,10 @@ selections:
     - configure_libreswan_crypto_policy
     - configure_ssh_crypto_policy
     - configure_kerberos_crypto_policy
+    - chronyd_no_chronyc_network
+    - chronyd_client_only
+    - kernel_module_atm_disabled
+    - kernel_module_can_disabled
+    - kernel_module_firewire-core_disabled
+    - kernel_module_tipc_disabled
+    - package_fapolicyd_installed

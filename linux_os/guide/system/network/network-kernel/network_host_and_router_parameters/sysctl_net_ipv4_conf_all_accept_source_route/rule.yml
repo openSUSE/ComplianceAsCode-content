@@ -1,8 +1,8 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
-title: 'Configure Kernel Parameter for Accepting IPv4 Source-Routed Packets for All Interfaces'
+title: 'Disable Kernel Parameter for Accepting Source-Routed Packets on all IPv4 Interfaces'
 
 description: '{{{ describe_sysctl_option_value(sysctl="net.ipv4.conf.all.accept_source_route", value="0") }}}'
 
@@ -21,8 +21,10 @@ severity: medium
 identifiers:
     cce@rhel6: 27037-1
     cce@rhel7: 27434-0
+    cce@rhel8: 81011-9
 
 references:
+    anssi: NT28(R22)
     stigid@rhel6: RHEL-06-000083
     srg@rhel6: SRG-OS-999999
     disa@rhel6: '1551'

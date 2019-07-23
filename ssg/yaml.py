@@ -8,11 +8,9 @@ import re
 
 from collections import OrderedDict
 
-from .jinja import extract_substitutions_dict_from_template, process_file
+from .jinja import load_macros, process_file
 from .constants import (PKG_MANAGER_TO_SYSTEM,
-                        PKG_MANAGER_TO_CONFIG_FILE,
-                        JINJA_MACROS_BASE_DEFINITIONS,
-                        JINJA_MACROS_HIGHLEVEL_DEFINITIONS)
+                        PKG_MANAGER_TO_CONFIG_FILE)
 from .constants import DEFAULT_UID_MIN
 
 try:
@@ -27,6 +25,10 @@ def _bool_constructor(self, node):
 
 # Don't follow python bool case
 yaml_SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', _bool_constructor)
+
+
+class DocumentationNotComplete(Exception):
+    pass
 
 
 def _save_rename(result, stem, prefix):
@@ -47,9 +49,11 @@ def _open_yaml(stream, original_file=None, substitutions_dict={}):
 
         if yaml_contents.pop("documentation_complete", "true") == "false" and \
                 substitutions_dict.get("cmake_build_type") != "Debug":
-            return None
+            raise DocumentationNotComplete("documentation not complete and not a debug build")
 
         return yaml_contents
+    except DocumentationNotComplete as e:
+        raise e
     except Exception as e:
         count = 0
         _file = original_file
@@ -108,19 +112,7 @@ def open_and_macro_expand(yaml_file, substitutions_dict=None):
     Do the same as open_and_expand, but load definitions of macros
     so they can be expanded in the template.
     """
-    if substitutions_dict is None:
-        substitutions_dict = dict()
-
-    try:
-        macro_definitions = extract_substitutions_dict_from_template(
-            JINJA_MACROS_BASE_DEFINITIONS, substitutions_dict)
-        macro_definitions.update(extract_substitutions_dict_from_template(
-            JINJA_MACROS_HIGHLEVEL_DEFINITIONS, substitutions_dict))
-    except Exception as exc:
-        msg = ("Error extracting macro definitions: {0}"
-               .format(str(exc)))
-        raise RuntimeError(msg)
-    substitutions_dict.update(macro_definitions)
+    substitutions_dict = load_macros(substitutions_dict)
     return open_and_expand(yaml_file, substitutions_dict)
 
 
@@ -173,7 +165,15 @@ def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
             data.items())
 
+    def _str_representer(dumper, data):
+        if '\n' in data:
+            return dumper.represent_scalar(u'tag:yaml.org,2002:str', data,
+                                           style='|')
+        else:
+            return dumper.represent_str(data)
+
     OrderedDumper.add_representer(OrderedDict, _dict_representer)
+    OrderedDumper.add_representer(str, _str_representer)
 
     # Fix formatting by adding a space in between tasks
     unformatted_yaml = yaml.dump(data, None, OrderedDumper, **kwds)

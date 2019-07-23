@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4
 
 title: 'Set Password Hashing Algorithm in /etc/libuser.conf'
 
@@ -27,7 +27,7 @@ severity: medium
 
 identifiers:
     cce@rhel6: 27229-4
-    cce@rhel7: 27053-8
+    cce@rhel7: 82038-1
     cce@rhel8: 80891-5
 
 references:

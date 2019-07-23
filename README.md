@@ -1,12 +1,13 @@
 # Welcome!
 
 [![Release](https://img.shields.io/github/release/ComplianceAsCode/content.svg)](https://github.com/ComplianceAsCode/content/releases/latest)
-[![Nightly ZIP Status](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-zip/badge/icon)](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-zip/)
-[![Nightly 5.10 ZIP Status](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-oval510-zip/badge/icon)](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-oval510-zip/)
-[![Link-checker Status](https://jenkins.complianceascode.io/job/scap-security-guide-linkcheck/badge/icon)](https://jenkins.complianceascode.io/job/scap-security-guide-linkcheck/)
-[![CentOS CI Status](https://ci.centos.org/job/openscap-scap-security-guide/badge/icon)](https://ci.centos.org/job/openscap-scap-security-guide/)
-[![Travis CI Build Status](https://travis-ci.org/OpenSCAP/scap-security-guide.svg?branch=master)](https://travis-ci.org/OpenSCAP/scap-security-guide)
+[![Nightly ZIP Status](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-zip/badge/icon?subject=Nightly%20OVAL-5.11%20ZIP&status=Download)](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-zip/lastSuccessfulBuild/artifact/scap-security-guide-nightly.zip)
+[![Nightly 5.10 ZIP Status](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-oval510-zip/badge/icon?subject=Nightly%20OVAL-5.10%20ZIP&status=Download)](https://jenkins.complianceascode.io/job/scap-security-guide-nightly-oval510-zip/lastSuccessfulBuild/artifact/scap-security-guide-nightly-oval-510.zip)
+[![Link-checker Status](https://jenkins.complianceascode.io/job/scap-security-guide-linkcheck/badge/icon?subject=Link%20Checker)](https://jenkins.complianceascode.io/job/scap-security-guide-linkcheck/)
+[![CentOS CI Status](https://ci.centos.org/job/openscap-scap-security-guide/badge/icon?subject=CentOS%20CI%20Build)](https://ci.centos.org/job/openscap-scap-security-guide/)
+[![Travis CI Build Status](https://img.shields.io/travis/OpenSCAP/scap-security-guide/master.svg?label=Travis%20CI%20Build)](https://travis-ci.org/OpenSCAP/scap-security-guide)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ComplianceAsCode/content/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ComplianceAsCode/content/?branch=master)
+[![Profile Statistics](https://jenkins.complianceascode.io/job/scap-security-guide-stats/badge/icon?subject=Statistics)](https://jenkins.complianceascode.io/job/scap-security-guide-stats/Statistics/)
 
 <a href="docs/readme_images/report_sample.png"><img align="right" width="250" src="docs/readme_images/report_sample.png" alt="Evaluation report sample"></a>
 
@@ -119,7 +120,7 @@ apt install ssg-applications  # for application-oriented guides (Firefox, JBoss,
 ### From release ZIP files
 
 Download pre-built SSG zip archive from
-[the release page](https://github.com/OpenSCAP/scap-security-guide/releases/latest).
+[the release page](https://github.com/ComplianceAsCode/content/releases/latest).
 Each zip file is an archive with ready-made SCAP source datastreams.
 
 ### From COPR
@@ -133,7 +134,7 @@ detailed instructions.
 
 ### From source
 
-If SCAP Security Guide is not packaged in your distribution or if the
+If ComplianceAsCode is not packaged in your distribution (it may be present there as `scap-security-guide` package), or if the
 version that is packaged is too old, you need to build the content yourself
 and install it via `make install`. Please see the [Developer Guide](docs/manual/developer_guide.adoc)
 document for more info. We also recommend opening an issue on that distributions
@@ -141,10 +142,10 @@ bug tracker to voice interest.
 
 ## Usage
 
-We assume you have installed SCAP Security Guide system-wide into a
-standard location as instructed in the previous section.
+We assume you have installed ComplianceAsCode system-wide into a
+standard location from current upstream sources as instructed in the previous section.
 
-There are several ways to consume SCAP Security Guide content, we will only
+There are several ways to consume ComplianceAsCode content, we will only
 go through a few of them here.
 
 ### `oscap` tool
@@ -196,32 +197,32 @@ oscap-ssh root@192.168.1.123 22 xccdf eval --profile xccdf_org.ssgproject.conten
 
 ### Ansible
 
-To see a list of available playbooks, run:
+To see a list of available Ansible Playbooks, run:
 
 ```bash
 # ls /usr/share/scap-security-guide/ansible/
 ...
-ssg-rhel6-role-standard.yml
-ssg-rhel6-role-stig-rhel6-server-upstream.yml
-ssg-rhel6-role-usgcb-rhel6-server.yml
-ssg-rhel7-role-C2S.yml
-ssg-rhel7-role-cjis-rhel7-server.yml
-ssg-rhel7-role-common.yml
-ssg-rhel7-role-docker-host.yml
-ssg-rhel7-role-nist-800-171-cui.yml
+rhel6-playbook-standard.yml
+rhel6-playbook-stig-rhel6-server-upstream.yml
+rhel6-playbook-usgcb-rhel6-server.yml
+rhel7-playbook-C2S.yml
+rhel7-playbook-cjis-rhel7-server.yml
+rhel7-playbook-common.yml
+rhel7-playbook-docker-host.yml
+rhel7-playbook-cui.yml
 ...
 ```
 
-These roles are generated from *SCAP* profiles available for the products.
+These Ansible Playbooks are generated from *SCAP* profiles available for the products.
 
 To apply the playbook on your local machine run:
 (*THIS WILL CHANGE CONFIGURATION OF THE MACHINE!*)
 
 ```bash
-ansible-playbook -i "localhost," -c local /usr/share/scap-security-guide/ansible/ssg-rhel7-role-rht-ccp.yml
+ansible-playbook -i "localhost," -c local /usr/share/scap-security-guide/ansible/rhel7-playbook-rht-ccp.yml
 ```
 
-Each of the Ansible playbooks contain instructions on how to deploy them. Here
+Each of the Ansible Playbooks contain instructions on how to deploy them. Here
 is a snippet of the instructions:
 
 ```YAML
@@ -238,6 +239,21 @@ is a snippet of the instructions:
 ...
 ```
 
+### Bash
+To see a list of available Bash scripts, run:
+
+```bash
+# ls /usr/share/scap-security-guide/bash/
+...
+rhel7-script-hipaa.sh
+rhel7-script-ospp.sh
+rhel7-script-pci-dss.sh
+...
+```
+
+These Bash scripts are generated from *SCAP* profiles available for the products.
+Similar to Ansible Playbooks, each of the Bash scripts contain instructions on how to deploy them.
+
 ## Support
 
 The SSG mailing list can be found at [https://lists.fedorahosted.org/mailman/listinfo/scap-security-guide](https://lists.fedorahosted.org/mailman/listinfo/scap-security-guide).
@@ -251,7 +267,7 @@ You can also join the `#openscap` IRC channel on `chat.freenode.net`.
 This project started in 2011 as a collaboration between government agencies and
 commercial operating system vendors. The original name was SCAP Security Guide.
 The original scope was to create SCAP datastreams. Over time, it grew into the
-biggest open-source SCAP content project.
+biggest open-source beyond-SCAP content project.
 
 The next few years saw the introduction of not just government-specific security
 profiles but also commercial, such as PCI-DSS.

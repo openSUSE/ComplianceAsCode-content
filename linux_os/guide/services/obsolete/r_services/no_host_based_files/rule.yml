@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8,sle12
+prodtype: wrlinux1019,rhel7,rhel8,sle12,rhv4
 
 title: 'Remove Host-Based Authentication Files'
 
@@ -27,7 +27,6 @@ references:
     disa: "366"
     srg: SRG-OS-000480-GPOS-00227
     stigid@rhel7: "040550"
-    stigid@rhel8: "040550"
     stigid@sle12: "010410"
 
 ocil_clause: 'these files exist'

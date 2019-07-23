@@ -9,843 +9,1219 @@ description: |-
 
 selections:
 
-    #######################################################
-    # 5.1.1 Cryptographic Support (FCS)
+    #################################################################
+    ## SELinux Configuration
+    #################################################################
 
-    #######################################################
-    ## FCS_CKM.1 Cryptographic Key Generation
+    ## Ensure SELinux is Enforcing
+    - var_selinux_state=enforcing
+    - selinux_state
 
-    ### FCS_CKM.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_CKM.1.1
-    ### The OS shall generate asymetric cryptographic
-    ### keys in accordance with a specified cryptographic key
-    ### generation algorithm.
-
-
-    ### FCS_CKM.2.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_CKM.2.1
-    ### The OS shall implement functionality to perform cryptographic
-    ### key establishment in accordance with a specified cryptographic
-    ### key establishment method
-
-    #######################################################
-    ## FCS_CKM_EXT.4 Cryptographic Key Destruction
-
-    ### FCS_CKM_EXT.4.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_CKM_EXT.4.1
-    ### The OS shall destroy cryptographic keys and key material in accordance
-    ### with a specified cryptographic key destruction method
-
-    ### FCS_CKM_EXT.4.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_CKM_EXT.4.2
-    ### The OS shall destroy all keys and key material when no longer needed
-
-    #######################################################
-    ## FCS_COP.1(1) Cryptographic Operation - Encryption/Decryption (Refined)
-
-    ### FCS_COP.1.1(1): https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_COP.1.1(1)
-    ### The OS shall perform encryption/decryption services for data
-    ### in accorance with a specified cryptographic algorithm
-
-    #######################################################
-    ## FCS_COP.1(2) Cryptographic Operation - Hashing (Refined)
-
-    ### FCS_COP.1.1(2): https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_COP.1.1(2)
-    ### The OS shall perform cryptographic hashing services in accordance
-    ### with a specified cryptographic algorithm SHA-1 and [selection]
-    ###         - SHA-256
-    ###         - SHA-384
-    ###         - SHA-512
-    ###         - no other algorithm
-
-    ### and message digest sizes 160 bits and [selection]
-    ###         - 256 bits
-    ###         - 384 bits
-    ###         - 512 bits
-    ###         - no other sizes
-
-    ### that meet the following: FIPS Pub 180-4
+    ## Configure SELinux Policy
+    - var_selinux_policy_name=targeted
+    - selinux_policytype
 
 
-    ### FCP_COP.1.1(3): https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_COP.1.1(3)
-    ### The OS shall perform cryptographic signature services (generation
-    ### and verification) in accordance with a specified algorithm
+    #################################################################
+    ## Bootloader Configuration
+    #################################################################
+    #TO DO: bootloader --location=mbr --append="boot=/dev/vda1 fips=1 "
+
+    ## Set the UEFI Boot Loader Password
+    - grub2_uefi_password
+
+    ## Require Authentication for Single User Mode
+    - require_singleuser_auth
+
+    ## Verify that Interactive Boot is Disabled
+    - grub2_disable_interactive_boot
+
+    ## Enable Auditing for Processes Which Start Prior to the Audit Daemon
+    - grub2_audit_argument
+
+    ## Extend Audit Backlog Limit for the Audit Daemon
+    - grub2_audit_backlog_limit_argument
+
+    ## Enable SLUB/SLAB allocator poisoning
+    - grub2_slub_debug_argument
+
+    ## Enable page allocator poisoning
+    - grub2_page_poison_argument
+
+    ## Enable Kernel Page-Table Isolation (KPTI)
+    - grub2_pti_argument
+
+    ## Disable vsyscalls
+    - grub2_vsyscall_argument
 
 
-    ### FCP_COP.1.1(4): https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_COP.1.1(4)
-    ### The OS shall perform keyed-hash message authentication services in
-    ### accordance with a specified cryptographic algorithm [selection]
-    ###     - SHA-1
-    ###     - SHA-256
-    ###     - SHA-384
-    ###     - SHA-512
+    #################################################################
+    ## Partitioning Configuration
+    #################################################################
 
-    ### with key size (in bits) used in HMAC
+    ###########
+    ## /boot
+    ###########
+    # TO DO: /boot on its own partition?!
 
-    ### and message digest sizes [selection]
-    ###     - 160 bits
-    ###     - 256 bits
-    ###     - 384 bits
-    ###     - 512 bits
+    ## Add nodev Option to /boot
+    - mount_option_boot_nodev
 
-    #######################################################
-    ## FCS_RBG_EXT.1 Random Bit Generation
+    ## Add nosuid Option to /boot
+    - mount_option_boot_nosuid
 
-    ### FCS_RBG_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_RBG_EXT.1.1
-    ### The OS shall perform all deterministic random bit generation (DRBG)
-    ### services in accordance with NIST Special Publication 800-90A using
-    ### [selection]
-    ###     - HASH_DRBG (any),
-    ###     - HMAC_DRBG (any),
-    ###     - CTR_DRBG (AES)
+    ###########
+    ## /home
+    ###########
+
+    ## Ensure /home Located On Separate Partition
+    ## SEE ALSO: https://github.com/ComplianceAsCode/content/issues/4484
+    ##  unclear if partition requirements still relevant
+    - partition_for_home
+
+    ## Add nodev Option to /home
+    - mount_option_home_nodev
+
+    ## Add nosuid Option to /home
+    - mount_option_home_nosuid
+
+    ###########
+    ## /var
+    ###########
+
+    ## Ensure /var Located on Separate Partition
+    ## SEE ALSO: https://github.com/ComplianceAsCode/content/issues/4486
+    ##  unclear if partition requirements still exist
+    - partition_for_var
+
+    ## Add nodev Option to /var
+    - mount_option_var_nodev
+
+    ###########
+    ## /var/log
+    ###########
+
+    ## Ensure /var/log Located on Separate Partition
+    - partition_for_var_log
+
+    ## Add nodev Option to /var/log
+    - mount_option_var_log_nodev
+
+    ## Add nosuid Option to /var/log
+    - mount_option_var_log_nosuid
+
+    ## Add noexec Option to /var/log
+    - mount_option_var_log_noexec
+
+    ###########
+    ## /var/log/audit
+    ###########
+    ## Ensure /var/log/audit Located on Separate Partition
+    - partition_for_var_log_audit
+
+    ## Add nodev Option to /var/log/audit
+    - mount_option_var_log_audit_nodev
+
+    ## Add nosuid Option to /var/log/audit
+    - mount_option_var_log_audit_nosuid
+
+    ## Add noexec Option to /var/log/audit
+    - mount_option_var_log_audit_noexec
+
+    ###########
+    ## /var/tmp
+    ###########
+
+    ## Add nodev Option to /var/tmp
+    - mount_option_var_tmp_nodev
+
+    ## Add nosuid Option to /var/tmp
+    - mount_option_var_tmp_nosuid
+
+    ## Add noexec Option to /var/tmp
+    - mount_option_var_tmp_noexec
+
+    ###########
+    ## /tmp
+    ###########
+
+    ## Setup a couple mountpoints by hand to ensure correctness
+    #touch /etc/fstab
+    ## Ensure /tmp Located On Separate Partition
+    #echo -e "tmpfs\t/tmp\t\t\t\ttmpfs\tdefaults,mode=1777,,,nodev,strictatime,size=512M\t0 0" >> /etc/fstab
+
+    ## Add nodev Option to /tmp
+    - mount_option_tmp_nodev
+
+    ## Add noexec Option to /tmp
+    - mount_option_tmp_noexec
+
+    ## Add nosuid Option to /tmp
+    - mount_option_tmp_nosuid
+
+    ###########
+    ## /swap
+    ###########
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4490
+    ##  do we need a swap partition (for security reasons)?
+    #logvol swap --name=lv_swap --vgname=VolGroup --size=2016
+
+    ###########
+    ## /dev/shm
+    ###########
+    ## Make sure /dev/shm is restricted
+    #echo -e "tmpfs\t/dev/shm\t\t\t\ttmpfs\tdefaults,mode=1777,,,strictatime\t0 0" >> /etc/fstab
+
+    ## Add nodev Option to /dev/shm
+    - mount_option_dev_shm_nodev
+
+    ## Add noexec Option to /dev/shm
+    - mount_option_dev_shm_noexec
+
+    ## Add nosuid Option to /dev/shm
+    - mount_option_dev_shm_nosuid
+
+    ###########
+    ## Misc Partitioning
+    ###########
+    ## Add nodev Option to Non-Root Local Partitions
+    - mount_option_nodev_nonroot_local_partitions
+
+    #################################################################
+    ## Required Packages
+    #################################################################
+
+    ## Install sssd-ipa Package
+    - package_sssd-ipa_installed
+
+    ## Install aide Package
+    - package_aide_installed
+
+    ## Install dnf-automatic Package
+    - package_dnf-automatic_installed
+
+    ## Install firewalld Package
+    - package_firewalld_installed
+
+    ## Install iptables Package
+    - package_iptables_installed
+
+    ## Install libcap-ng-utils Package
+    - package_libcap-ng-utils_installed
+
+    ## Install openscap-scanner Package
+    - package_openscap-scanner_installed
+
+    ## Install policycoreutils Package
+    - package_policycoreutils_installed
+
+    ## Install python-rhsm Package
+    - package_python-rhsm_installed
+
+    ## Install rng-tools Package
+    - package_rng-tools_installed
+
+    ## Install sudo Package
+    - package_sudo_installed
+
+    ## Install tmux Package
+    - package_tmux_installed
+
+    ## Install usbguard Package
+    - package_usbguard_installed
+
+    ## Install audispd-plugins Package
+    - package_audispd-plugins_installed
+
+    ## Install scap-security-guide Package
+    - package_scap-security-guide_installed
+
+    ## Ensure the audit Subsystem is Installed
+    - package_auditd_installed
+
+    ## Install libreswan Package
+    - package_libreswan_installed
+
+    ## Ensure rsyslog is Installed
+    - package_rsyslog_installed
+
+    #################################################################
+    ## Remove Prohibited Packages
+    #################################################################
+
+    ## Uninstall Sendmail Package
+    - package_sendmail_removed
+
+    ## Uninstall iprutils Package
+    - package_iprutils_removed
+
+    ## Uninstall gssproxy Package
+    - package_gssproxy_removed
+
+    ## Uninstall nfs-utils Package
+    - package_nfs-utils_removed
+
+    ## Uninstall krb5-workstation Package
+    - package_krb5-workstation_removed
+
+    ## Uninstall abrt-addon-kerneloops Package
+    - package_abrt-addon-kerneloops_removed
+
+    ## Uninstall abrt-addon-python Package
+    - package_abrt-addon-python_removed
+
+    ## Uninstall abrt-addon-ccpp Package
+    - package_abrt-addon-ccpp_removed
+
+    ## Uninstall abrt-plugin-rhtsupport Package
+    - package_abrt-plugin-rhtsupport_removed
+
+    ## Uninstall abrt-plugin-logger Package
+    - package_abrt-plugin-logger_removed
+
+    ## Uninstall abrt-plugin-sosreport Package
+    - package_abrt-plugin-sosreport_removed
+
+    ## Uninstall abrt-cli Package
+    - package_abrt-cli_removed
+
+    ## Uninstall tuned Package
+    - package_tuned_removed
+
+    ## Uninstall Automatic Bug Reporting Tool (abrt)
+    - package_abrt_removed
+
+    #################################################################
+    ##
+    ## Set PATH correctly
+    ##
+    #################################################################
+
+    ## TO DO
+    #PATH=/bin:/usr/bin:/sbin:/usr/sbin:$PATH
+
+    #################################################################
+    ##
+    ## Configure Audit Daemon
+    ##
+    #################################################################
+
+    ## Enable auditd Service
+    - service_auditd_enabled
 
 
-    ### FCS_RBG_EXT.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_RBG_EXT.1.2
-    ### The deterministic RBG used by the OS shall be seeded by an entropy source
-    ### that accumulates entropy from a [selection]
-    ###     - software-based noise source,
-    ###     - platform-based noise source
+    #################################################################
+    ##
+    ## Audit Successful/Unsuccessful File Creation
+    ## (open with O_CREAT)
+    ##
+    #################################################################
 
-    ### with a minimum of [selection]
-    ###     - 128 bits
-    ###     - 256 bits
-    ### of entropy at least equal to the greatest strength (according to NIST
-    ### 800-57) of the keys and hashes that it will generate.
+    ## Record Unsuccessful Creation Attempts to Files - openat O_CREAT
+    - audit_rules_unsuccessful_file_modification_openat_o_creat
 
-    #######################################################
-    ## FCS_STO_EXT.1 Storage of Sensitive Data
+    ## Record Successful Creation Attempts to Files - opanat O_CREAT
+    - audit_rules_successful_file_modification_openat_o_creat
 
-    ### FCS_STO_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_STO_EXT.1.1
-    ### The OS shall implement functionality to encrypt sensitive data stored
-    ### in non-volatile storage and provide interfaces to applications to
-    ### invoke this functionality
+    ## Record Unsuccessful Creation Attempts to Files - open_by_handle_at O_CREAT
+    - audit_rules_unsuccessful_file_modification_open_by_handle_at_o_creat
 
-    #######################################################
-    ## FCS_TLSC_EXT.1 TLS Client Protocol
+    ## Record Successful Creation Attempts to Files - open_by_handle_at O_CREAT
+    - audit_rules_successful_file_modification_open_by_handle_at_o_creat
 
-    ### FCS_TLSC_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_TLSC_EXT.1.1
-    ### The OS shall implement TLS 1.2 (RFC 5246) supporting the following
-    ### cipher suites: [selection:
-    ###     - TLS_RSA_WITH_AES_128_CBC_SHA as defined in RFC 5246,
-    ###     - TLS_RSA_WITH_AES_128_CBC_SHA256 as defined in RFC 5246,
-    ###     - TLS_RSA_WITH_AES_256_CBC_SHA256 as defined in RFC 5246,
-    ###     - TLS_RSA_WITH_AES_256_CBC_SHA384 as defined in RFC 5288,
-    ###     - TLS_DHE_RSA_WITH_AES_128_CBC_SHA256 as defined in RFC 5246,
-    ###     - TLS_DHE_RSA_WITH_AES_256_CBC_SHA256 as defined in RFC 5246,
-    ###     - TLS_DHE_RSA_WITH_AES_256_GCM_SHA384 as defined in RFC 5288,
-    ###     - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 as defined in RFC 5289,
-    ###     - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 as defined in RFC 5289,
-    ###     - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 as defined in RFC 5289,
-    ###     - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 as defined in RFC 5289,
-    ###     - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 as defined in RFC 5289,
-    ###     - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 as defined in RFC 5289,
-    ###     - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 as defined in RFC 5289,
-    ###     - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 as defined in RFC 5289
+    ## Record Unsuccessful Creation Attempts to Files - open O_CREAT
+    - audit_rules_unsuccessful_file_modification_open_o_creat
+
+    ## Record Successful Creation Attempts to Files - open O_CREAT
+    - audit_rules_successful_file_modification_open_o_creat
+
+    #################################################################
+    ##
+    ## Audit Successful/Unsuccessful File Modifications
+    ## (open for write or truncate with O_TRUNC_WRITE)
+    ##
+    #################################################################
+
+    ## Record Unsuccessful Modification Attempts to Files - openat O_TRUNC_WRITE
+    - audit_rules_unsuccessful_file_modification_openat_o_trunc_write
+
+    ## Record Successful Modification Attempts to Files - openat O_TRUNC_WRITE
+    - audit_rules_successful_file_modification_openat_o_trunc_write
+
+    ## Record Unsuccessful Modification Attempts to Files - open_by_handle_at O_TRUNC_WRITE
+    - audit_rules_unsuccessful_file_modification_open_by_handle_at_o_trunc_write
+
+    ## Record Successful Modification Attempts to Files - open_by_handle_at O_TRUNC_WRITE
+    - audit_rules_successful_file_modification_open_by_handle_at_o_trunc_write
+
+    ## Record Unsuccessful Modification Attempts to Files - open O_TRUNC_WRITE
+    - audit_rules_unsuccessful_file_modification_open_o_trunc_write
+
+    ## Record Successful Modification Attempts to Files - open O_TRUNC_WRITE
+    - audit_rules_successful_file_modification_open_o_trunc_write
+
+    #################################################################
+    ##
+    ## Audit Successful/Unsuccessful File Access
+    ## (any other opens)
+    ##
+    ## This has to go last.
+    ##
+    #################################################################
+
+    ## Record Unsuccessful Access Attempts to Files - open
+    - audit_rules_unsuccessful_file_modification_open
+
+    ## Record Successful Access Attempts to Files - open
+    - audit_rules_successful_file_modification_open
+
+    ## Record Unsuccessful Access Attempts to Files - creat
+    - audit_rules_unsuccessful_file_modification_creat
+
+    ## Record Successful Access Attempts to Files - creat
+    - audit_rules_successful_file_modification_creat
+
+    ## Record Unsuccessful Access Attempts to Files - truncate
+    - audit_rules_unsuccessful_file_modification_truncate
+
+    ## Record Successful Access Attempts to Files - truncate
+    - audit_rules_successful_file_modification_truncate
+
+    ## Record Unsuccessful Access Attempts to Files - ftruncate
+    - audit_rules_unsuccessful_file_modification_ftruncate
+
+    ## Record Successful Access Attempts to Files - ftruncate
+    - audit_rules_successful_file_modification_ftruncate
+
+    ## Record Unsuccessful Access Attempts to Files - openat
+    - audit_rules_unsuccessful_file_modification_openat
+
+    ## Record Successful Access Attempts to Files - openat
+    - audit_rules_successful_file_modification_openat
+
+    ## Record Unsuccessful Access Attempts to Files - open_by_handle_at
+    - audit_rules_unsuccessful_file_modification_open_by_handle_at
+
+    ## Record Successful Access Attempts to Files - open_by_handle_at
+    - audit_rules_successful_file_modification_open_by_handle_at
+
+    #################################################################
+    ##
+    ## Audit Successful/Unsuccessful File Delete
+    ##
+    #################################################################
+
+    ## Record Unsuccessful Delete Attempts to Files - unlink
+    - audit_rules_unsuccessful_file_modification_unlink
+
+    ## TO DO: Record Successful Delete Attempts to Files - unlink
+    - audit_rules_successful_file_modification_unlink
+
+    ## Record Unsuccessful Delete Attempts to Files - unlinkat
+    - audit_rules_unsuccessful_file_modification_unlinkat
+
+    ## TO DO: Record Successful Delete Attempts to Files - unlinkat
+    - audit_rules_successful_file_modification_unlinkat
+
+    ## Record Unsuccessful Delete Attempts to Files - rename
+    - audit_rules_unsuccessful_file_modification_rename
+
+    ## TO DO: Record Successful Delete Attempts to Files - rename
+    - audit_rules_successful_file_modification_rename
+
+    ## Record Unsuccessful Delete Attempts to Files - renameat
+    - audit_rules_unsuccessful_file_modification_renameat
+
+    ## TO DO: Record Successful Delete Attempts to Files - renameat
+    - audit_rules_successful_file_modification_renameat
+
+    #################################################################
+    ##
+    ## Audit Successful/Unsuccessful Permission Change
+    ##
+    #################################################################
+
+    ## Record Unsuccessul Permission Changes to Files - chmod
+    - audit_rules_unsuccessful_file_modification_chmod
+
+    ## Record Successful Permission Changes to Files - chmod
+    - audit_rules_successful_file_modification_chmod
+
+    ## Record Unsuccessul Permission Changes to Files - fchmod
+    - audit_rules_unsuccessful_file_modification_fchmod
+
+    ## Record Successful Permission Changes to Files - fchmod
+    - audit_rules_successful_file_modification_fchmod
+
+    ## Record Unsuccessul Permission Changes to Files - fchmodat
+    - audit_rules_unsuccessful_file_modification_fchmodat
+
+    ## Record Successful Permission Changes ot Files - fchmodat
+    - audit_rules_successful_file_modification_fchmodat
+
+    ## Record Unsuccessul Permission Changes to Files - setxattr
+    - audit_rules_unsuccessful_file_modification_setxattr
+
+    ## Record Successful Permission Changes ot Files - setxattr
+    - audit_rules_successful_file_modification_setxattr
+
+    ## Record Unsuccessul Permission Changes to Files - lsetxattr
+    - audit_rules_unsuccessful_file_modification_lsetxattr
+
+    ## Record Successful Permission Changes ot Files - lsetxattr
+    - audit_rules_successful_file_modification_lsetxattr
+
+    ## Record Unsuccessul Permission Changes to Files - fsetxattr
+    - audit_rules_unsuccessful_file_modification_fsetxattr
+
+    ## Record Successful Permission Changes ot Files - fsetxattr
+    - audit_rules_successful_file_modification_fsetxattr
+
+    ## Record Unsuccessul Permission Changes to Files - removexattr
+    - audit_rules_unsuccessful_file_modification_removexattr
+
+    ## Record Successful Permission Changes ot Files - removexattr
+    - audit_rules_successful_file_modification_removexattr
+
+    ## Record Unsuccessul Permission Changes to Files - lremovexattr
+    - audit_rules_unsuccessful_file_modification_lremovexattr
+
+    ## Record Successful Permission Changes ot Files - lremovexattr
+    - audit_rules_successful_file_modification_lremovexattr
+
+    ## Record Unsuccessul Permission Changes to Files - fremovexattr
+    - audit_rules_unsuccessful_file_modification_fremovexattr
+
+    ## Record Successful Permission Changes ot Files - fremovexattr
+    - audit_rules_successful_file_modification_fremovexattr
+
+    #################################################################
+    ##
+    ## Audit Successful/Unsuccessful Ownership Change
+    ##
+    #################################################################
+
+    ## Record Unsuccessul Ownership Changes to Files - lchown
+    - audit_rules_unsuccessful_file_modification_lchown
+
+    ## Record Successful Ownership Changes to Files - lchown
+    - audit_rules_successful_file_modification_lchown
+
+    ## Record Unsuccessul Ownership Changes to Files - fchown
+    - audit_rules_unsuccessful_file_modification_fchown
+
+    ## Record Successful Ownership Changes to Files - fchown
+    - audit_rules_successful_file_modification_fchown
+
+    ## Record Unsuccessul Ownership Changes to Files - chown
+    - audit_rules_unsuccessful_file_modification_chown
+
+    ## Record Successful Ownership Changes to Files - chown
+    - audit_rules_successful_file_modification_chown
+
+    ## Record Unsuccessul Ownership Changes to Files - fchownat
+    - audit_rules_unsuccessful_file_modification_fchownat
+
+    ## Record Successful Ownership Changes to Files - fchownat
+    - audit_rules_successful_file_modification_fchownat
+
+    #################################################################
+    ##
+    ## Audit User Add, Delete, Modify
+    ##
+    ## This is covered by PAM. However, someone could open a file
+    ## and directly create of modify a user, so we'll watch
+    ## passwd and shadow for writes.
+    ##
+    #################################################################
+    ## User add delete modify. This is covered by pam. However, someone could
+    ## open a file and directly create or modify a user, so we'll watch passwd and
+    ## shadow for writes
+    #-a always,exit -F arch=b32 -S openat,open_by_handle_at -F a2&03 -F path=/etc/passwd -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b64 -S openat,open_by_handle_at -F a2&03 -F path=/etc/passwd -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b32 -S open -F a1&03 -F path=/etc/passwd -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b64 -S open -F a1&03 -F path=/etc/passwd -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b32 -S openat,open_by_handle_at -F a2&03 -F path=/etc/shadow -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b64 -S openat,open_by_handle_at -F a2&03 -F path=/etc/shadow -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b32 -S open -F a1&03 -F path=/etc/shadow -F auid>=1000 -F auid!=unset -F key=user-modify
+    #-a always,exit -F arch=b64 -S open -F a1&03 -F path=/etc/shadow -F auid>=1000 -F auid!=unset -F key=user-modify
+
+    ## Record Events that Modify User/Group Information via openat syscall - /etc/passwd
+    - audit_rules_etc_passwd_openat
+
+    ## Record Events that Modify User/Group Information via open_by_handle_at syscall - /etc/passwd
+    - audit_rules_etc_passwd_open_by_handle_at
+
+    ## Record Events that Modify User/Group Information via open syscall - /etc/passwd
+    - audit_rules_etc_passwd_open
+
+    ## Record Events that Modify User/Group Information via openat syscall - /etc/shadow
+    - audit_rules_etc_shadow_openat
+
+    ## Record Events that Modify User/Group Information via open_by_handle_at syscall - /etc/shadow
+    - audit_rules_etc_shadow_open_by_handle_at
+
+    ## Record Events that Modify User/Group Information via open syscall - /etc/shadow
+    - audit_rules_etc_shadow_open
+
+    #################################################################
+    ##
+    ## Audit User Enable and Disable
+    ##
+    ## These events are covered by PAM. No special audit rules
+    ## are required.
+    ##
+    #################################################################
+    
+
+    #################################################################
+    ##
+    ## Audit Group Add, Delete, and Modify
+    ##
+    ## These events are covered by PAM. However, someone could
+    ## open a file and directly create or modify a user or group, so
+    ## we'll watch the files directly for write activity.
+    ##
+    #################################################################
+    
+    ## Record Events that Modify User/Group Information - /etc/group
+    - audit_rules_usergroup_modification_group
+
+    ## Record Events that Modify User/Group Information - /etc/gshadow
+    - audit_rules_usergroup_modification_gshadow
+
+    ## Record Events that Modify User/Group Information - /etc/passwd
+    - audit_rules_usergroup_modification_passwd
+
+    ## Record Events that Modify User/Group Information - /etc/shadow
+    - audit_rules_usergroup_modification_shadow
+
+    #################################################################
+    ##
+    ## Audit Privileged Commands
+    ##
+    ## Use of special rights for config changes. This would be use
+    ## of setuid programs that relate to user accounts. This is not
+    ## all setuid apps because requirements are only for the ones
+    ## that affect system configuration.
+    ##
+    #################################################################
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - at
+    - audit_rules_privileged_commands_at
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - crontab
+    - audit_rules_privileged_commands_crontab
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - gpasswd
+    - audit_rules_privileged_commands_gpasswd
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - mount
+    - audit_rules_privileged_commands_mount
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - newgidmap
+    - audit_rules_privileged_commands_newgidmap
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - newgrp
+    - audit_rules_privileged_commands_newgrp
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - newuidmap
+    - audit_rules_privileged_commands_newuidmap
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - passwd
+    - audit_rules_privileged_commands_passwd
+
+    ## Record Any Attempts to Run seunshare
+    - audit_rules_execution_seunshare
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - umount
+    - audit_rules_privileged_commands_umount
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - unix_chkpwd
+    - audit_rules_privileged_commands_unix_chkpwd
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - userhelper
+    - audit_rules_privileged_commands_userhelper
+
+    ## Ensure auditd Collects Information on the Use of Privileged Commands - usernetctl
+    - audit_rules_privileged_commands_usernetctl
 
 
-    ### FCS_TLSC_EXT.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_TLSC_EXT.1.2
-    ### The OS shall verify that the presented identifier matches the reference
-    ### identifier according to RFC 6125
+    #################################################################
+    ##
+    ## Audit Attempts to Alter Logging Data
+    ##
+    #################################################################
+
+    ## Record Access Events to Audit Log Directory
+    - directory_access_var_log_audit
+
+    #################################################################
+    ##
+    ## Audit Loading Kernel Modules
+    ##
+    #################################################################
+
+    ## Ensure auditd Collects Information on Kernel Module Loading - init_module
+    - audit_rules_kernel_module_loading_init
+
+    ## Ensure auditd Collects Information on Kernel Module Loading - finit_module
+    - audit_rules_kernel_module_loading_finit
+
+    ## Ensure auditd Collects Information on Kernel Module Unloading - delete_module
+    - audit_rules_kernel_module_loading_delete
 
 
-    ### FCS_TLSC_EXT.1.3: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_TLSC_EXT.1.3
-    ### The OS shall only establish a trusted channel of the peer certificate is valid
+    #################################################################
+    ##
+    ## Audit Attempts to Alter Process & Session Ininitiation
+    ##
+    #################################################################
+
+    ## Record Attempts to Alter Process and Session Initiation Information
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4505
+    ##  known bug, need to breakout OVAL into independent checks:
+    #   -a always,exit -F path=/var/log/wtmp -F perm=wa -F auid>=1000 -F auid!=unset -F key=session
+    #   -a always,exit -F path=/var/run/utmp -F perm=wa -F auid>=1000 -F auid!=unset -F key=session
+    #   -a always,exit -F path=/var/log/btmp -F perm=wa -F auid>=1000 -F auid!=unset -F key=session
+    - audit_rules_session_events
+
+    #################################################################
+    ##
+    ## Audit Attempts to Alter MAC Controls
+    ##
+    #################################################################
+
+    ## Record Events that Modify the System's Mandatory Access Controls
+    ##  TO DO: known but about syntax
+    ##          https://github.com/ComplianceAsCode/content/issues/4504
+    - audit_rules_mac_modification
 
 
-    #######################################################
-    # 5.1.2 User Data Protection (FDP)
+    #################################################################
+    ## Audit Configuration
+    #################################################################
 
-    #######################################################
-    ## FDP_ACF_EXT.1 Access Controlls for Protecting User Data
+    ## Include Local Events in Audit Logs
+    - auditd_local_events
 
-    ### FDP_ACF_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FDP_ACF_EXT.1.1
-    ### The OS shall implement access controls which can prohibit
-    ### unprivileged users from accessing files and directories
-    ### owned by other users
+    # TODO: write_logs=YES
 
-    #######################################################
-    # 5.1.3 Security Management (FMT)
+    # TODO: log_format=ENRICHED
 
-    #######################################################
-    ## FMT_MOF_EXT.1 Management of security functions behavior
+    ## Configure auditd flush priority
+    - auditd_data_retention_flush
+    - var_auditd_flush=incremental_async
 
-    ### FMT_MOF_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FMT_MOF_EXT.1.1
-    ### The OS shall restrict the ability to perform the function
-    ### indicated in the "Administrator" column in FMT_SMF_EXT.1.1 to
-    ### the administrator
+    # TODO: freq=50
 
-    #### enable/disable screen lock
-
-    #### enable/disable session timeout
-
-    #### configure screen lock inactivity timeout
-
-    #### configure session inactivity timeout
-    - dconf_gnome_disable_user_admin
+    # TODO: name_format=HOSTNAME
 
 
-    #######################################################
-    ## FMT_SMF_EXT.1 Specification of Management Functions
+    #################################################################
+    ## Audispd plugins
+    #################################################################
 
-    ### FMT_SMF_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FMT_SMF_EXT.1.1
-    ### The OS shall be capable of performing the following
-    ### management functions:
+    ## Configure auditd to use audispd's syslog plugin
+    - auditd_audispd_syslog_plugin_activated
 
-    ### NOTE: rules below are from the NIAP Configuration Annex at
-    ### https://www.niap-ccevs.org/MMO/PP/424.CANX/
+    #################################################################
+    ## Application Whitelisting
+    #################################################################
+    - package_fapolicyd_installed
+    - service_fapolicyd_enabled
 
-    ### FMT_MOF_EXT.1 / IA-5(1)(a)
-    ### Configure Minimum Password Length to 12 Characters
-    - var_password_pam_minlen=12
-    - accounts_password_pam_minlen
+    #################################################################
+    ## Harden USB Guard
+    #################################################################
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4498
+    #set -g lock-after-time 900
+
+    ## Configure the tmux Lock Command
+    - configure_tmux_lock_command
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4499
+    #set -g status off
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4496
+    #cat << EOF > /tmp/rules.conf
+    #allow with-interface equals { 09:00:* }
+    #allow with-interface equals { 03:*:* }
+    #allow with-interface equals { 03:*:* 03:*:* }
+    #EOF
+    #}
+
+    #setup_usbguard () {
+    #    chmod 0600 /tmp/rules.conf
+    #    mv /tmp/rules.conf /etc/usbguard/
+    #    restorecon -R /etc/usbguard/
+    #}
+
+    #################################################################
+    ## Software update
+    #################################################################
+
+    ## Ensure Red Hat GPG Key Installed
+    - ensure_redhat_gpgkey_installed
+
+    ## Ensure gpgcheck Enabled In Main yum Configuration
+    - ensure_gpgcheck_globally_activated
+
+    ## Ensure gpgcheck Enabled for Local Packages
+    - ensure_gpgcheck_local_packages
+
+    ## Ensure gpgcheck Enabled for All yum Package Repositories
+    - ensure_gpgcheck_never_disabled
+
+
+    #################################################################
+    ## Kernel Security Settings
+    #################################################################
+
+    ## Restrict Exposed Kernel Pointer Addresses Access
+    - sysctl_kernel_kptr_restrict
+
+    ## Restrict Access to Kernel Message Buffer
+    - sysctl_kernel_dmesg_restrict
+
+    ## Disallow kernel profiling by unprivileged users
+    - sysctl_kernel_perf_event_paranoid
+
+    ## Disable Kernel Image Loading
+    - sysctl_kernel_kexec_load_disabled
+
+    ## Disable the use of user namespaces
+    - sysctl_user_max_user_namespaces
+
+    ## Disable Access to Network bpf() Syscall From Unprivileged Processes
+    - sysctl_kernel_unprivileged_bpf_disabled
+
+    ## Harden the operation of the BPF just-in-time compiler
+    - sysctl_net_core_bpf_jit_harden
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4495
+    #cp -f /usr/lib/sysctl.d/10-default-yama-scope.conf /etc/sysctl.d/
+
+    ## Restrict Usage of ptrace To Descendant Processes
+    - sysctl_kernel_yama_ptrace_scope
+
+    #################################################################
+    ## Network Settings
+    #################################################################
+
+    ## Disable Accepting Router Advertisements on All IPv6 Interfaces
+    - sysctl_net_ipv6_conf_all_accept_ra
+
+    ## Disable Accepting Router Advertisements on All IPv6 Interfaces by Default
+    - sysctl_net_ipv6_conf_default_accept_ra
+
+    ## Disable Accepting ICMP Redirects for All IPv4 Interfaces
+    - sysctl_net_ipv4_conf_all_accept_redirects
+
+    ## Disable Accepting ICMP Redirects for All IPv6 Interfaces
+    - sysctl_net_ipv6_conf_all_accept_redirects
+
+    ## Disable Kernel Parameter for Accepting ICMP Redirects by Default on IPv4 Interfaces
+    - sysctl_net_ipv4_conf_default_accept_redirects
+
+    ## Disable Kernel Parameter for Accepting ICMP Redirects by Default on IPv6 Interfaces
+    - sysctl_net_ipv6_conf_default_accept_redirects
+
+    ## Disable Kernel Parameter for Accepting Source-Routed Packets on all IPv4 Interfaces
+    - sysctl_net_ipv4_conf_all_accept_source_route
+
+    ## Disable Kernel Parameter for Accepting Source-Routed Packets on all IPv6 Interfaces
+    - sysctl_net_ipv6_conf_all_accept_source_route
+
+    ## Disable Kernel Parameter for Accepting Source-Routed Packets on IPv4 Interfaces by Default
+    - sysctl_net_ipv4_conf_default_accept_source_route
+
+    ## Disable Kernel Parameter for Accepting Source-Routed Packets on IPv4 Interfaces by Default
+    - sysctl_net_ipv6_conf_default_accept_source_route
+
+    ## Disable Kernel Parameter for Accepting Secure ICMP Redirects on all IPv4 Interfaces
+    - sysctl_net_ipv4_conf_all_secure_redirects
+
+    ## Disable Kernel Parameter for Accepting Secure ICMP Redirects on all IPv4 Interfaces by Default
+    - sysctl_net_ipv4_conf_default_secure_redirects
+
+    ## Disable Kernel Parameter for Sending ICMP Redirects on all IPv4  Interfaces 
+    - sysctl_net_ipv4_conf_all_send_redirects
+
+    ## Disable Kernel Parameter for Sending ICMP Redirects on all IPv4 Interfaces by Default
+    - sysctl_net_ipv4_conf_default_send_redirects
+
+    ## Enable Kernel Parameter to Log Martian Packets on all IPv4 Interfaces
+    - sysctl_net_ipv4_conf_all_log_martians
+
+    ## Enable Kernel Paremeter to Log Martian Packets on all IPv4 Interfaces by Default
+    - sysctl_net_ipv4_conf_default_log_martians
+
+    ## Enable Kernel Parameter to Use Reverse Path Filtering on all IPv4 Interfaces
+    - sysctl_net_ipv4_conf_all_rp_filter
+
+    ## Enable Kernel Parameter to Use Reverse Path Filtering on all IPv4 Interfaces by Default
+    - sysctl_net_ipv4_conf_default_rp_filter
+
+    ## Enable Kernel Parameter to Ignore Bogus ICMP Error Responses on IPv4 Interfaces
+    - sysctl_net_ipv4_icmp_ignore_bogus_error_responses
+
+    ## Enable Kernel Parameter to Ignore ICMP Broadcast Echo Requests on IPv4 Interfaces
+    - sysctl_net_ipv4_icmp_echo_ignore_broadcasts
+
+    ## TO DO: NEED SCAP RULE
+    #echo "net.ipv6.icmp.echo_ignore_all = 0" >> $CONFIG
+
+    ## Disable Kernel Parameter for IP Forwarding on IPv4 Interfaces
+    - sysctl_net_ipv4_ip_forward
+
+    ## Enable Kernel Parameter to Use TCP Syncookies on IPv4 Interfaces
+    - sysctl_net_ipv4_tcp_syncookies
+
+    #################################################################
+    ## File System Settings
+    #################################################################
+
+    ## Enable Kernel Parameter to Enforce DAC on Hardlinks
+    - sysctl_fs_protected_hardlinks
+
+    ## Enable Kernel Parameter to Enforce DAC on Symlinks
+    - sysctl_fs_protected_symlinks
+
+
+    #################################################################
+    ## Disable Core Dumps
+    #################################################################
+    
+    ## Disable storing core dumps
+    - sysctl_kernel_core_pattern
+    #sed -i "/^#Storage/s/#Storage=external/Storage=none/" /etc/systemd/coredump.conf
+    #sed -i "/^#ProcessSize/s/#ProcessSizeMax=2G/ProcessSizeMax=0/" /etc/systemd/coredump.conf
+    #systemctl mask systemd-coredump.socket
+    #systemctl mask kdump.service
+
+    #################################################################
+    ## Blacklist Risky Kernel Modules
+    #################################################################
+
+    ## Disable IEEE 1394 (FireWire) Support
+    - kernel_module_firewire-core_disabled
+
+    ## Disable Mounting of cramfs
+    - kernel_module_cramfs_disabled
+
+    ## Disable ATM Support
+    - kernel_module_atm_disabled
+
+    ## Disable Bluetooth Kernel Module
+    - kernel_module_bluetooth_disabled
+    
+    ## Disable CAN Support
+    - kernel_module_can_disabled
+
+    ## Disable SCTP Support
+    - kernel_module_sctp_disabled
+    
+    ## Disable Transparent Inter Process Communication Support
+    - kernel_module_tipc_disabled
+
+    #################################################################
+    ## Systemd Items
+    #################################################################
+
+    ## Disable Ctrl-Alt-Del Reboot Activation
+    - disable_ctrlaltdel_reboot
+
+    ## Disable Ctrl-Alt-Del Burst Action
+    - disable_ctrlaltdel_burstaction
+
+    ## Disable debug-shell SystemD Service
+    - service_debug-shell_disabled
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4460
+    # sed -i "/^#SystemMaxUse/s/#SystemMaxUse=/SystemMaxUse=200/" /etc/systemd/journald.conf
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4461
+    # systemctl mask systemd-resolved.service
+
+    #################################################################
+    ## Configure Hostname
+    #################################################################
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4462
+    ## echo "ospp" > /etc/hostname
+    ## sed -i "s/localhost\.localdomain/ospp/g" /etc/hosts
+
+    #################################################################
+    ## Audit Daemon Configuration
+    #################################################################
+
+    #chmod -R 640 "$RULES/*"
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4463
+    #sed -i "/name_format/s/NONE/HOSTNAME/" /etc/audit/auditd.conf
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4464
+    #sed -i "/^active/s/no/yes/" /etc/audit/plugins.d/syslog.conf
+
+    ## Point rsyslog to a remote system to collect logs. This will need
+    ## remote_host and port corrected on the Target line.
+    #CONFIG="/etc/rsyslog.conf"
+    #sed -i "/#action/s/^#//" $CONFIG
+    #sed -i "/#queue/s/^#//" $CONFIG
+    #sed -i "/#Target/s/^#//" $CONFIG
+
+    #################################################################
+    ## Firewall & Network Manager
+    #################################################################
+
+    - service_firewalld_enabled
+
+    #################################################################
+    ## Harden chrony (time server)
+    #################################################################
+
+    ## Disable chrony daemon from acting as server
+    - chronyd_client_only
+
+    ## Disable network management of chrony daemon
+    - chronyd_no_chronyc_network
+
+    #################################################################
+    ## Setup SSH Server
+    #################################################################
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4466
+    #sed -i "/ed25519/s/HostKey/#HostKey/" $CONFIG
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4467
+    #sed -i "s/#RekeyLimit default none/RekeyLimit 512M/" $CONFIG
+
+    ## Disable SSH Root Login
+    - sshd_disable_root_login
+
+    ## Enable Use of Strict Mode Checking
+    - sshd_enable_strictmodes
+
+    ## Disable Host-Based Authentication
+    - disable_host_auth
+
+    ## Disable SSH Support for User Known Hosts
+    - sshd_disable_user_known_hosts
+
+    ## Disable SSH Support for .rhosts Files
+    - sshd_disable_rhosts
+
+    ## Disable SSH Access via Empty Passwords
+    - sshd_disable_empty_passwords
+
+    ## Disable Kerberos Authentication
+    - sshd_disable_kerb_auth
+
+    ## Disable GSSAPI Authentication
+    - sshd_disable_gssapi_auth
+
+    ## Set SSH Idle Timeout Interval
+    - sshd_idle_timeout_value=10_minutes
+    - sshd_set_idle_timeout
+
+    ## Set SSH Client Alive Max Count
+    - var_sshd_set_keepalive=3
+    - sshd_set_keepalive
+
+    ## Enable SSH Warning Banner
+    - sshd_enable_warning_banner
+
+    ## Use Only FIPS 140-2 Validated Ciphers
+    - sshd_use_approved_ciphers
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4469
+    #echo -e "PubkeyAcceptedKeyTypes ssh-rsa,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384" >> $CONFIG
+
+    ## Use Only FIPS 140-2 Validated MACs
+    ## SEE ALSO: https://github.com/ComplianceAsCode/content/issues/4470
+    - sshd_use_approved_macs
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4471
+    #echo -e "KexAlgorithms diffie-hellman-group14-sha1,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521" >> $CONFIG
+
+    #################################################################
+    ## Enable rngd Service
+    #################################################################
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4472
+    #sysctl enable rngd.service
+
+    #################################################################
+    ## sssd Settings
+    #################################################################
+    ## TO DO -- entire section
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4501
+    ## sssd settings
+    ## FIXME: We need to point this to a remote LDAP policy server
+    #CONFIG="/etc/sssd/conf.d/ospp.conf"
+    #touch $CONFIG
+    #chmod 600 $CONFIG
+    #echo -e "[sssd]" >> $CONFIG
+    #echo -e "user = sssd\n" >> $CONFIG
+
+    ## Configure SSSD to run as user sssd
+    - sssd_run_as_sssd_user
+
+    #################################################################
+    ## Enable / Configure USB Guard
+    #################################################################
+    
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4473
+    #sed -i "/AuditBackend/s/FileAudit/LinuxAudit/" /etc/usbguard/usbguard-daemon.conf
+
+    ## TO DO: HOW TO HANDLE??
+    #setup_usbguard
+
+    ## Enable the USBGuard Service
+    - service_usbguard_enabled
+
+    #################################################################
+    ## Enable / Configure FIPS
+    #################################################################
+    
+    ## Enable FIPS Mode
+    - enable_fips_mode
+
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4500
+    # - sysctl_crypto_fips_enabled
+
+    ## Enable Dracut FIPS Module
+    - enable_dracut_fips_module
+
+    # - etc_system_fips_exists
+
+    #################################################################
+    ## Libreswan Setup
+    #################################################################
+    
+    ## libreswan setup
+    # FIXME: Need to talk to Paul about generic server/client setups
+    # And for servers, need to punch holes in firewall
+
+    #################################################################
+    ## Account & Password Settings
+    #################################################################
+
+    ## Set Password Minimum Length in login.defs
+    - var_accounts_password_minlen_login_defs=12
     - accounts_password_minlen_login_defs
 
-    ### FMT_MOF_EXT.1 / IA-5(1)(a)
-    ### Require at Least 1 Special Character in Password
-    - var_password_pam_ocredit=1
-    - accounts_password_pam_ocredit
+    ## Ensure PAM Enforces Password Requirements - Minimum Different Characters
+    - var_password_pam_difok=4
+    - accounts_password_pam_difok
 
-    ### FMT_MOF_EXT.1 / IA-5(1)(a)
-    ### Require at Least 1 Numeric Character in Password
+    ## Ensure PAM Enforces Password Requirements - Minimum Length
+    - var_password_pam_minlen=12
+    - accounts_password_pam_minlen
+
+    ## Minimum Digit Characters
     - var_password_pam_dcredit=1
     - accounts_password_pam_dcredit
 
-    ### FMT_MOF_EXT.1 / IA-5(1)(a)
-    ### Require at Least 1 Uppercase Character in Password
+    ## Ensure PAM Enforces Password Requirements - Minimum Uppercase Characters
     - var_password_pam_ucredit=1
     - accounts_password_pam_ucredit
 
-    ### FMT_MOF_EXT.1 / IA-5(1)(a)
-    ### Require at Least 1 Lowercase Character in Password
+    ## Ensure PAM Enforces Password Requirements - Minimum Lowercase Characters
     - var_password_pam_lcredit=1
     - accounts_password_pam_lcredit
 
-    ### FMT_MOF_EXT.1 / AC-11(a)
-    ### Enable Screen Lock
-    - package_tmux_installed
-    - dconf_use_text_backend
-    - dconf_gnome_screensaver_idle_activation_enabled
-    - dconf_gnome_screensaver_idle_delay
-    - dconf_gnome_screensaver_lock_delay
-    - dconf_gnome_screensaver_lock_enabled
-    - dconf_gnome_screensaver_mode_blank
-    - dconf_gnome_screensaver_user_info
-    - dconf_gnome_screensaver_user_locks
-    - dconf_gnome_session_idle_user_locks
-    - configure_tmux_lock_command
+    ## Ensure PAM Enforces Password Requirements - Minimum Special Characters
+    - var_password_pam_ocredit=1
+    - accounts_password_pam_ocredit
 
-    ### FMT_MOF_EXT.1 / AC-11(a)
-    ### Set Screen Lock Timeout Period to 30 Minutes or Less
-    - accounts_tmout
-    - var_accounts_tmout=30_min
+    ## Set Password Maximum Consecutive Repeating Characters
+    - var_password_pam_maxrepeat=3
+    - accounts_password_pam_maxrepeat
 
-    ### FIA_AFL.1
-    ### Disable Unauthenticated Login (such as Guest Accounts)
-    - no_empty_passwords
-    - grub2_password
-    - grub2_uefi_password
-    - grub2_disable_interactive_boot
-    - require_singleuser_auth
-    - service_debug-shell_disabled
-    - sshd_disable_empty_passwords
-    - sshd_disable_root_login
-    - gnome_gdm_disable_automatic_login
-    - gnome_gdm_disable_guest_login
-    - sssd_offline_cred_expiration
-    - sssd_memcache_timeout
-    - var_sssd_memcache_timeout=1_day
-    - disable_host_auth
-    - sshd_disable_gssapi_auth
-    - sshd_disable_kerb_auth
-    - sshd_disable_rhosts_rsa
-    - sshd_disable_rhosts
-    - sshd_disable_user_known_hosts
+    ## Ensure PAM Enforces Password Requirements - Maximum Consecutive Repeating Characters from Same Character Class
+    - var_password_pam_maxclassrepeat=4
+    - accounts_password_pam_maxclassrepeat
 
-    ### FMT_MOF_EXT.1 / AC-7(a)
-    ### Set Maximum Number of Authentication Failures to
-    ### 3 within 15 minutes
+    ## Set umask Variable for next few rules
+    - var_accounts_user_umask=027
+
+    ## Ensure the Default Umask is Set Correctly in /etc/profile
+    - accounts_umask_etc_profile
+
+    ## Ensure the Default Bash Umask is Set Correctly
+    - accounts_umask_etc_bashrc
+
+    ## Ensure the Default C Shell Umask is Set Correctly
+    - accounts_umask_etc_csh_cshrc
+
+    ## SEE ALSO: https://github.com/ComplianceAsCode/content/issues/4475
+    # - accounts_umask_etc_login_defs
+
+    #################################################################
+    ## PAM Setup
+    #################################################################
+
+    ## Disable Core Dumps for All Users
+    - disable_users_coredumps
+
+    ## Limit the Number of Concurrent Login Sessions Allowed Per User
+    - var_accounts_max_concurrent_login_sessions=10
+    - accounts_max_concurrent_login_sessions
+
+    ## RANDOM TO DO
+    #sed -i "6s/^#//" /etc/pam.d/su
+    #sed -i "8iauth        required      pam_faillock.so preauth silent " /etc/pam.d/system-auth
+    #sed -i "8iauth        required      pam_faillock.so preauth silent " /etc/pam.d/password-auth
+
+    # securetty is disabled by default in RHEL8, but it can be enabled just by editing a few files
+    - securetty_root_login_console_only
+
+    ## Limit Password Reuse
+    - accounts_password_pam_unix_remember
+    - var_password_pam_unix_remember=5
+
+    ## Set Deny For Failed Password Attempts
     - var_accounts_passwords_pam_faillock_deny=3
-    - var_accounts_passwords_pam_faillock_fail_interval=900
-    - var_accounts_passwords_pam_faillock_unlock_time=never
-    - var_password_pam_retry=3
-    - accounts_password_pam_retry
-    - accounts_passwords_pam_faillock_deny_root
     - accounts_passwords_pam_faillock_deny
+
+    ## Set Interval For Counting Failed Password Attempts
+    - var_accounts_passwords_pam_faillock_fail_interval=900
     - accounts_passwords_pam_faillock_interval
+
+    ## Set Lockout Time for Failed Password Attempts
+    - var_accounts_passwords_pam_faillock_unlock_time=never
     - accounts_passwords_pam_faillock_unlock_time
-    - dconf_gnome_login_retries
 
-    ### FMT_MOF_EXT.1 / SC-7(12)
-    ### Enable Host-Based Firewall
-    - service_firewalld_enabled
-    - set_firewalld_default_zone
 
+    ## Prevent Login to Accounts With Empty Password
+    - no_empty_passwords
 
-    ### FMT_MOF_EXT.1 / CM-3(3)
-    ### Configure Name/Address of Remote Management
-    ### Server From Which to Receive Config Settings
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4480
+    #sed -i 's/nullok//' /etc/pam.d/system-auth
 
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4481
+    #sed -i 's/nullok//' /etc/pam.d/sssd-shadowutils
 
-    ### FAU_GEN.1.1.c / AU-4(1)
-    ### Configure the System to Offload Audit Records to a Log Server
-    - rsyslog_remote_loghost
-    - auditd_audispd_syslog_plugin_activated
-    - auditd_audispd_configure_remote_server
-    - auditd_audispd_encrypt_sent_records    
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4479
+    ## setup tmux
+    #mv /tmp/tmux.conf /etc/tmux.conf
+    #restorecon /etc/tmux.conf
+    #sed -i 's/^fi/  if [ "$PS1" ]; then\n    [[ $TERM != "screen" ]] \&\& exec tmux\n  fi\nfi/' /etc/bashrc
+    #sed -i '/tmux$/d' /etc/shells
 
-    ### FMT_MOF_EXT.1 / AC-8(a)
-    ### Set Logon Warning Banner
-    - dconf_gnome_banner_enabled
-    - dconf_gnome_login_banner_text
-    - banner_etc_issue
-    - sshd_enable_warning_banner
-    - login_banner_text=usgcb_default
+    #################################################################
+    ## Enable Automatic Software Updates
+    #################################################################
 
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit All Logons (Success/Failure)
-    ### and Logoffs (Successful)
+    ## RHEL 8 CCE-82267-6: Configure dnf-automatic to Install Only Security Updates
+    - dnf-automatic_security_updates_only
 
+    ## Configure dnf-automatic to Install Available Updates Automatically
+    - dnf-automatic_apply_updates
 
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit File and Object Events (Unsuccessful)
-
-    #### CREATE (Unsuccessful)
-    - audit_rules_unsuccessful_file_modification_creat
-
-    #### ACCESS (Unsuccessful)
-    - audit_rules_unsuccessful_file_modification_openat_o_creat
-    - audit_rules_unsuccessful_file_modification_openat_o_trunc_write
-    - audit_rules_unsuccessful_file_modification_openat
-    - audit_rules_unsuccessful_file_modification_openat_rule_order
-    - audit_rules_unsuccessful_file_modification_open_by_handle_at_o_creat
-    - audit_rules_unsuccessful_file_modification_open_by_handle_at_o_trunc_write
-    - audit_rules_unsuccessful_file_modification_open_by_handle_at
-    - audit_rules_unsuccessful_file_modification_open_by_handle_at_rule_order
-    - audit_rules_unsuccessful_file_modification_open_o_creat
-    - audit_rules_unsuccessful_file_modification_open_o_trunc_write
-    - audit_rules_unsuccessful_file_modification_open
-    - audit_rules_unsuccessful_file_modification_open_rule_order
-
-    #### DELETE (Unsuccessful)
-    - audit_rules_unsuccessful_file_modification_unlink
-    - audit_rules_unsuccessful_file_modification_unlinkat
- #   - audit_rules_file_deletion_events_renameat
- #   - audit_rules_file_deletion_events_rename
- #   - audit_rules_file_deletion_events_rmdir
- #   - audit_rules_file_deletion_events_unlinkat
- #   - audit_rules_file_deletion_events_unlink
-
-    #### MODIFY (Unsuccessful)
-    - audit_rules_unsuccessful_file_modification_ftruncate
-    - audit_rules_unsuccessful_file_modification_truncate
-    - audit_rules_unsuccessful_file_modification_rename
-    - audit_rules_unsuccessful_file_modification_renameat
-#   - audit_rules_privileged_commands_passwd
-#    - audit_rules_privileged_commands_unix_chkpwd
-#    - audit_rules_privileged_commands_userhelper
-#    - audit_rules_privileged_commands_usernetctl
-#    - audit_rules_privileged_commands_chage
-#    - audit_rules_privileged_commands_chsh
-#    - audit_rules_privileged_commands_pt_chown
-
-    #### PERMISSION MODIFICATION (Unsuccessful)
-#    - audit_rules_dac_modification_chmod
-#    - audit_rules_dac_modification_fchmodat
-#    - audit_rules_dac_modification_fchmod
-#    - audit_rules_dac_modification_fremovexattr
-#    - audit_rules_dac_modification_fsetxattr
-#    - audit_rules_dac_modification_lremovexattr
-#    - audit_rules_dac_modification_lsetxattr
-#    - audit_rules_dac_modification_removexattr
-#    - audit_rules_dac_modification_setxattr
-#    - audit_rules_execution_chcon
-#    - audit_rules_execution_restorecon
-#    - audit_rules_execution_semanage
-#    - audit_rules_execution_seunshare
-#    - audit_rules_execution_setsebool
-#    - audit_rules_mac_modification
-
-
-    #### OWNERSHIP MODIFICATION (Unsuccessful)
-    - audit_rules_unsuccessful_file_modification_chown
-    - audit_rules_unsuccessful_file_modification_fchownat
-    - audit_rules_unsuccessful_file_modification_fchown
-    - audit_rules_unsuccessful_file_modification_lchown
-#    - audit_rules_dac_modification_chown
-#    - audit_rules_dac_modification_fchownat
-#    - audit_rules_dac_modification_fchown
-#    - audit_rules_dac_modification_lchown
-
-
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit User and Group Management Events (Success/Failure)
-
-    #### USER ADD (Success/Failure)
-
-
-    #### USER DELETE (Success/Failure)
-
-
-    #### USER MODIFY (Success/Failure)
-    - audit_rules_usergroup_modification_passwd
-    - audit_rules_usergroup_modification_shadow
-    - audit_rules_etc_shadow_open
-    - audit_rules_etc_shadow_openat
-    - audit_rules_etc_shadow_open_by_handle_at
-    - audit_rules_etc_passwd_open
-    - audit_rules_etc_passwd_openat
-    - audit_rules_etc_passwd_open_by_handle_at
-
-    #### USER DISABLE (Success/Failure)
-
-
-    #### USER ENABLE (Success/Failure)
-
-
-    #### GROUP/ROLE ADD (Succes/Failure)
-    - audit_rules_privileged_commands_newgidmap
-    - audit_rules_privileged_commands_newgrp
-    - audit_rules_privileged_commands_newuidmap
-
-    ##### GROUP/ROLE DELETE (Success/Failure)
-
-
-    ##### GROUP/ROLE MODIFY (Success/Failure)
-    - audit_rules_privileged_commands_gpasswd
-    - audit_rules_usergroup_modification_group
-    - audit_rules_usergroup_modification_gshadow
-    - audit_rules_etc_gshadow_open
-    - audit_rules_etc_gshadow_openat
-    - audit_rules_etc_gshadow_open_by_handle_at
-    - audit_rules_usergroup_modification_opasswd
-    - audit_rules_etc_group_open
-    - audit_rules_etc_group_openat
-    - audit_rules_etc_group_open_by_handle_at
-
-    - audit_rules_privileged_commands_sudoedit
-
-
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit Privilege and Role Escalation Events (Success/Failure)
-    - audit_rules_privileged_commands_sudo
-    - audit_rules_privileged_commands_su
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit All Audit and Log Data Accesses (Success/Failure)
-    - audit_rules_login_events_faillock
-    - audit_rules_login_events_lastlog
-    - audit_rules_login_events_tallylog
-    - directory_access_var_log_audit
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit Cryptographic Verification of Software (Success/Failure)
-
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit Program Initiations (Success/Failure)
-
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit System Reboot, Restart, and Shutdown
-    ### Events (Success/Failure)
-
-
-    ### FAU_GEN.1.1.c / AU-2(a)
-    ### Audit Kernel Module Loading and Unloading Events (Success/Failure)
-    - audit_rules_kernel_module_loading_delete
-    - audit_rules_kernel_module_loading_init
-    - audit_rules_kernel_module_loading_insmod
-    - audit_rules_kernel_module_loading_modprobe
-    - audit_rules_kernel_module_loading_rmmod
-
-    ### FMT_MOF_EXT.1 / SI-2
-    ### Enable Automatic Software Update
-
-
-    #######################################################
-    # 5.1.4 Protection of the TSF (FPT)
-
-    #######################################################
-    ## FPT_ACF_EXT.1 Access Controls
-
-    ### FPT_ACF_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_ACF_EXT.1.1
-    ### The OS shall implement access controls which prohibit
-    ### unprivileged users from modifying:
-    ###     - kernel and its drivers/modules
-    ###     - security audit logs
-    ###     - shared libraries
-    ###     - system executables
-    ###     - system configuration files
-    ###     - [assignment: other objects]
-
-    ### FPT_ACF_EXT.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_ACF_EXT.1.2
-    ### The OS shall implement access controls which prohibit
-    ### unprivileged users from reading:
-    ###     - security audit logs
-    ###     - system-wide credential repositories
-    ###     - [assignment: list of other objects]
-
-    #######################################################
-    ## FPT_ASLR_EXT.1 Address Space Layout Randomization
-
-    ### FPT_ASLR_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_ASLR_EXT.1.1
-    ### The OS shall always randomize address space memory locations
-    ### with [selection: 8, [assignment: number greater than 8]] bits of
-    ### entropy except for [assignment: list of explicity exceptions]
-
-    #######################################################
-    ## FPT_SBOP_EXT.1 Stack Buffer Overflow Protection
-
-    ### FPT_SBOP_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_SBOP_EXT.1.1
-    ### The OS shall [selection: employ stack-based buffer overflow protections,
-    ### not store parameters/variables in the same data structures as control
-    ### flow values].
-
-    #######################################################
-    ## FPT_TST_EXT.1 Boot Integrity
-
-    ### FPT_TST_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_TST_EXT.1.1
-    ### The OS shall verify the integrity of the bootchain up through
-    ### the OS kernel and [selection:
-    ###     - all executable code stored in mutable media,
-    ###     - [assignment: list of other executable code],
-    ###     - no other executable code
-    ###
-    ### ] prior to its execution through the use of [selection:
-    ###     - a digital signature using a hardware-protected
-    ###       asymetric key,
-    ###     - a hardware-protected hash]
-
-    #######################################################
-    ## FPT_TUD_EXT.1 Trusted Update
-
-    ### FPT_TUD_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_TUD_EXT.1.1
-    ### The OS shall provide the ability to check for updates
-    ### to the OS software itself.
-    - security_patches_up_to_date
-
-    ### FPT_TUD_EXT.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_TUD_EXT.1.2
-    ### The OS shall cryptographically verify updates to itself using
-    ### a digital signature prior to installation using schemes specified
-    ### in FCS_COP.1(3).
-
-    #######################################################
-    ## FPT_TUD_EXT.2 Trusted Update for Application Software
-
-    ### FPT_TUD_EXT.2.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_TUD_EXT.2.1
-    ### The OS shall provide the ability to check for updates to
-    ### application software
-
-    ### FPT_TUD_EXT.2.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_TUD_EXT.2.2
-    ### The OS shall cryptographically verify the integrity of updates
-    ### to applications using a digital signature specified by FCS_COP.1(3)
-    ### prior to installation.
-
-
-    #######################################################
-    # 5.1.5 Audit Data Generation (FAU)
-
-    #######################################################
-    ## FAU_GEN.1 Audit Data Generation (Refined)
-
-    ### FAU_GEN.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FAU_GEN.1.1
-    ### The OS shall be able to generate an audit record
-    ### of the following auditable events:
-    ###
-    ### RESPONSE: This requirement regards capability,
-    ###           no configuration action needed.
-
-    ### FAU_GEN.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FAU_GEN.1.2
-    ### The OS shall record within each audit record at least
-    ### the following information:
-    ###
-    ###     a. Date and time of the event, type of event, subject
-    ###        identity (if applicable), and outcome (success or failure)
-    ###        of the event; and
-    ###     b. For each audit event type, based on the auditable event
-    ###        definitions of the functional components included in the
-    ###        PP/ST, [assignment: other audit relevant information]
-
-    #######################################################
-    # 5.1.6 Identification and Authentication (FIA)
-
-    #######################################################
-    ## FIA_AFL.1 Authentication failure handling (Refined)
-
-    ### FIA_AFL.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FIA_AFL.1.1
-    ### The OS shall detet when [selection:
-    ###     - [assignment: positive integer number],
-    ###     - an administrator configurable positive integer within
-    ###       [assignment: range of acceptable values]
-    ### ] unsuccessful authentication attempts occur related to
-    ### events with [selection:
-    ###     - authentication based on user name and password,
-    ###     - authentication based on user name and a PIN that releases
-    ###       an asymmetric key stored in OE-protected storage,
-    ###     - authentication based on X.509 certificates
-    ### ]
-
-    ### FIA_AFL.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FIA_AFL.1.2
-    ### When the defined number of unsuccesful authentication attempts
-    ### for an account has been met, the OS shall: [selection:
-    ### Account Lockout, Account Disablement, Mandatory Credential Reset,
-    ### [assignment: list of actions]].
-
-    #######################################################
-    ## FIA_UAU.5 Multiple Authentication Mechanisms (Refined)
-
-    ### FIA_UAU.5.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FIA_UAU.5.1
-    ### The OS shall provide the following authentication mechanisms
-    ### [selection:
-    ###     - authentication based on user name and password,
-    ###     - authentication based on user name and a PIN that releases
-    ###       an asymmetric key stored in OE-protected storage,
-    ###     - authentication based on X.509 certificates,
-    ###     - for use in SSH only, SSH public key-based authentication
-    ###       as specified by the EP.for Secure Shell
-    ### ] to support user authentication.
-
-    ### FIA_UAU.5.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FIA_UAU.5.2
-    ### The OS shall authenticate any user's claimed identity according to
-    ### [assignment: rules describing how the multiple authentication
-    ### mechanisms provide authentication].
-
-    #######################################################
-    ## FIA_X509_EXT.1 X.509 Certificate Validation
-
-    ### FIA_X509_EXT.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FIA_X509_EXT.1.1
-    ### The OS shall implement functionality to validate certificates
-    ### in accordance with the following rules:
-    ###     - RFC 5280 certificate validation and certificate path validation
-    ###     - The certificate path must terminate with a trusted CA certificate
-    ###     - The OS shall validate a certificate path by ensuring the presense
-    ###       of the basicConstraints extension and that the CA flag is set to
-    ###       TRUE for all CA certificates
-    ###     - The OS shall validate the revocation status of the certificate
-    ###       using [selection: the Online Certificate Status Protocol (OSCP)
-    ###       as specified RFC 2560, a Certificate Revocation List (CRL) as
-    ###       specified in RFC 5759, an OCSP TLS Status Request Extension
-    ###       (i.e., OSCP stapling) as specified in RFC 6066].
-    ###     - The OS shall validate the extendedKeyUsage field according to the
-    ###       following rules:
-    ###         * Certificates used for trusted updates and executable code
-    ###           integrity verification shall have the Code Signing purpose
-    ###           (id-kp 3 with OID 1.3.6.1.5.5.7.3.3) in the extendedKeyUsage
-    ###           field.
-    ###         * Server certificates presented for TLS shall have the Server
-    ###           Authentication purpose (id-kp 1 with OID 1.3.6.1.5.5.7.3.1)
-    ###           in the extendedKeyUsage field.
-    ###         * Client certificates presented for TLS shall have the Client
-    ###           Authentication purpose (id-kp 2 with OID 1.3.6.1.5.5.7.3.2) in the
-    ###           extendedKeyUsage field.
-    ###         * S/MIME certificates presented for email encryption and signature
-    ###           shall have the Email Protection purpose (id-kp 4 with OID
-    ###           1.3.6.1.5.5.7.3.4) in the extendedKeyUsage field.
-    ###         * OCSP certificates presented for OCSP responses shall have the OCSP
-    ###           Signing purpose (id-kp 9 with OID 1.3.6.1.5.5.7.3.9) in the
-    ###           extendedKeyUsage field.
-    ###         * (Conditional) Server certificates presented for EST shall have the
-    ###           CMC Registration Authority (RA) purpose (id-kp-cmcRA with OID
-    ###           1.3.6.1.5.5.7.3.28) in the extendedKeyUsage field.
-
-    #######################################################
-    ## FIA_X509_EXT.2 X.509 Certificate Authentication
-
-    ### FIA_X509_EXT.2.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FIA_X509_EXT.2.1
-    ### The OS shall use X.509v3 certificates as defined by RFC 5280 to
-    ### support authentication for TLS and [selection: DTLS, HTTPS, [assignment:
-    ### other protocols], no other protocols] connections.
-
-    #######################################################
-    # 5.1.7 Trusted Path/Channels (FTP)
-
-    #######################################################
-    ## FTP_ITC_EXT.1 Trusted channel communication
-
-    ### FTP_ITC_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FTP_ITC_EXT.1.1
-    ### The OS shall use [selection:
-    ###     - TLS as conforming to FCS_TLSC_EXT.1,
-    ###     - DTLS as conforming to FCS_DTLS_EXT.1,
-    ###     - IPsec as conforming to the EP for IPsec VPN Clients,
-    ###     - SSH as conforming to EP for Secure Shell
-    ### ] to provide a trusted communication channel between itself and authorized
-    ### IT entities supporting the following capabilities: [sekection: audit server,
-    ### authentication server, management server, [assignment: other capabilities]]
-    ### that is logically distinct from other communication channels and provides
-    ### assured identification of its end points and protection of the channel data
-    ### from disclosure and detection of modification of the channel data.
-
-    #######################################################
-    ## FTP_TRP.1 Trusted Path
-
-    ### FTP_TRP.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FTP_TRP.1.1
-    ### The OS shall provide a communication path between itself and
-    ### [selection: remote, local] users that is logically distinct from other
-    ### communication paths and provides assured identification of its endpoints
-    ### and protection of the communicated data from modification and disclosure.
-
-
-    ### FTP_TRP.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FTP_TRP.1.2
-    ### The OS shall permid [selection: the TSF, local users, remote users]
-    ### to initiate communication via the trusted path.
-
-
-    ### FTP_TRP.1.3: https://www.niap-ccevs.org/MMO/PP/-424-/#FTP_TRP.1.3
-    ### The OS shall require use of the trusted path for all remote
-    ### administrative actions.
-
-    #######################################################
-    # 5.2.3 Class AGD: Guidance Documentation
-
-    #######################################################
-    ## Content and presentation elements
-
-    ### AGD_PRE.1.2C: https://www.niap-ccevs.org/MMO/PP/-424-/#AGD_PRE.1.2C
-    ### The preparative procedures shall describe all the steps necessary
-    ### for secure installation of the OS and for all the secure preparation
-    ### of the operational environment in accordance with the security
-    ### objectives for the operational environment as described in the ST
-    - installed_OS_is_vendor_supported
-    - installed_OS_is_FIPS_certified
-    - grub2_audit_argument
-    - grub2_audit_backlog_limit_argument
-    - service_auditd_enabled
-    - rpm_verify_hashes
-    - selinux_all_devicefiles_labeled
-    - selinux_confinement_of_daemons
-    - selinux_policytype
-    - selinux_state
-    - audit_rules_immutable
-    - var_selinux_policy_name=targeted
-    - var_selinux_state=enforcing
-    - ensure_redhat_gpgkey_installed
-    - ensure_gpgcheck_globally_activated
-    - ensure_gpgcheck_never_disabled
-    - ensure_gpgcheck_local_packages
-
-    #######################################################
-    # Appendix A Optional Requirements
-
-    #######################################################
-    ## FCS_TLSC_EXT.4 TLS Client Protocol
-
-    ### FCS_TLSC_EXT.4.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_TLSC_EXT.4.1
-    ### The OS shall support mutual authentication using X.509v3 certificates
-
-    #######################################################
-    ## FDP_IFC_EXT.1 Information flow control
-
-    ### FDP_IFC_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FDP_IFC_EXT.1.1
-    ### The OS shall [selection:
-    ###     - provide an interface which allows a VPN client to protect
-    ###       all IP traffic using IPsec,
-    ###     - provide a VPN client which can protects all IP traffic
-    ###       using IPsec
-    ### ] with the exception of IP traffic required to establish the VPN connection
-    ### and [selection: signed updates directly from the OS vendor, no other
-    ### traffic]
-
-    #######################################################
-    ## FTA_TAB.1 Default TOE access banners
-
-    ### FTA_TAB.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FTA_TAB.1.1
-    ### Before establishing a user session, the OS shall display an
-    ### advisory warning message regarding unauthorized use of the OS.
-
-
-    #######################################################
-    # Appendix B Selection-Based Requirements
-
-    #######################################################
-    ## FCS_DTLS_EXT.1 DTLS Implementation
-
-    ### FCS_DTLS_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_DTLS_EXT.1.1
-    ### The OS shall implement the DTLS protocol in accordance with
-    ### [selection: DTLS 1.0 (RFC 4347), DTLS 1.2 (RFC 6347)].
-
-
-    ### FCS_DTLS_EXT.1.2: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_DTLS_EXT.1.2
-    ### The OS shall implement the requirements in TLS (FCS_TLSC_EXT.1) for the DTLS
-    ### implementation, except where variations are allowed according to DTLS
-    ### 1.2 (RFC 6347).
-
-    #######################################################
-    ## FCS_TLSC_EXT.2 TLS Client Protocol
-
-    ### FCS_TLSC_EXT.2.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_TLSC_EXT.2.1
-    ### The OS shall present the Supported Elliptical Curves Extension in the Client
-    ### Hello with the following NIST curves: [selection: secp256r1, secp384r1,
-    ### secp521r1].
-
-
-    #######################################################
-    # Appendix C Objective Requirements
-
-    #######################################################
-    ## FCS_TLSC_EXT.3 TLS Client Protocol
-
-    ### FCS_TLSC_EXT.3.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FCS_TLSC_EXT.3.1
-    ### The OS shall present the signature_algorithms extension in the Client Hello
-    ### with the supported_signature_algorithms value containing the following hash
-    ### algorithms: [selection: SHA256, SHA384, SHA512] and no other hash algorithms.
-
-
-    #######################################################
-    ## FPT_SRP_EXT.1 Software Restriction Policies
-
-    ### FPT_SRP_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_SRP_EXT.1.1
-    ### The OS shall restrict execution to only programs which match an
-    ### administrator-specified [selection:
-    ###     - file path,
-    ###     - file digital signature,
-    ###     - version,
-    ###     - hash,
-    ###     - [assignment: other characteristics]]
-
-
-    #######################################################
-    ## FPT_W^X_EXT.1 Write XOR Execute Memory Pages
-
-    ### FPT_W^X_EXT.1.1: https://www.niap-ccevs.org/MMO/PP/-424-/#FPT_W^X_EXT.1.1
-    ### The OS shall prevent allocation of any memory region with both write
-    ### and execute permissions except for [assignment: list of exceptions]
-
-
-
-
-
-
-
-
-
-    #######################################################
-    ## Rules that need a home?
-
-    - enable_fips_mode
-    - sysctl_kernel_yama_ptrace_scope
-    - sysctl_kernel_kptr_restrict
-    - sysctl_kernel_kexec_load_disabled
-    - sysctl_kernel_dmesg_restrict
-    - grub2_slub_debug_argument
-    - grub2_page_poison_argument
-    - grub2_vsyscall_argument
-
-    - audit_rules_privileged_commands_at
-    - audit_rules_privileged_commands_crontab
-    - audit_rules_privileged_commands_mount
-    - audit_rules_privileged_commands_umount
-    - audit_rules_sysadmin_actions
-    - audit_rules_session_events
-
-    - audit_rules_privileged_commands_ssh_keysign
-    - rsyslog_cron_logging
-    - mount_option_dev_shm_nodev
-    - mount_option_dev_shm_noexec
-    - mount_option_dev_shm_nosuid
-    - package_abrt_removed
-
-    - var_system_crypto_policy=fips
-    - configure_crypto_policy
-    - configure_bind_crypto_policy
-    - configure_openssl_crypto_policy
-    - configure_libreswan_crypto_policy
-    - configure_ssh_crypto_policy
-    - configure_kerberos_crypto_policy
+    ## TO DO: https://github.com/ComplianceAsCode/content/issues/4478
+    #systemctl enable --now dnf-automatic.timer

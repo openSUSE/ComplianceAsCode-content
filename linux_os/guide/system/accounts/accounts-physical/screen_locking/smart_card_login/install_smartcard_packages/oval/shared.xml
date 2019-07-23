@@ -7,7 +7,7 @@
         <platform>Red Hat Enterprise Linux 8</platform>
         <platform>SUSE Linux Enterprise 12</platform>
       </affected>
-      <description>The required RPM packages must be installed.</description>
+      <description>The RPM packages esc and pam_pkcs11 must be installed.</description>
     </metadata>
       <criteria comment="packages for smartcard use are installed">
       {{% if product == "sle12" %}}
@@ -22,7 +22,6 @@
       {{% else %}}
       <extend_definition comment="pam_pkcs11 package is installed" definition_ref="package_pam_pkcs11_installed" />
       <extend_definition comment="esc package is installed" definition_ref="package_esc_installed" />
-      <extend_definition comment="authconfig-gtk package is installed" definition_ref="package_authconfig-gtk_installed" />
       {{% endif %}}
       </criteria>
   </definition>

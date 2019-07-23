@@ -17,6 +17,7 @@ severity: unknown
 identifiers:
     cce@rhel6: 26669-2
     cce@rhel7: 80204-1
+    cce@rhel8: 81035-8
 
 references:
     stigid@rhel6: RHEL-06-000344
@@ -29,6 +30,7 @@ references:
     cobit5: APO13.01,BAI03.01,BAI03.02,BAI03.03
     iso27001-2013: A.14.1.1,A.14.2.1,A.14.2.5,A.6.1.5
     cis-csc: '18'
+    anssi: NT28(R35)
 
 ocil_clause: 'the above command returns no output, or if the umask is configured incorrectly'
 

@@ -6,7 +6,7 @@ import os.path
 
 product_directories = ['debian8', 'fedora', 'ol7', 'ol8', 'opensuse', 'rhel6',
                        'rhel7', 'rhel8', 'sle11', 'sle12', 'ubuntu1404',
-                       'ubuntu1604', 'ubuntu1804', 'wrlinux', 'rhosp13',
+                       'ubuntu1604', 'ubuntu1804', 'wrlinux8', 'wrlinux1019', 'rhosp13',
                        'chromium', 'eap6', 'firefox', 'fuse6', 'jre', 'ocp3',
                        'example']
 
@@ -14,6 +14,10 @@ JINJA_MACROS_BASE_DEFINITIONS = os.path.join(os.path.dirname(os.path.dirname(
     __file__)), "shared", "macros.jinja")
 JINJA_MACROS_HIGHLEVEL_DEFINITIONS = os.path.join(os.path.dirname(os.path.dirname(
     __file__)), "shared", "macros-highlevel.jinja")
+JINJA_MACROS_ANSIBLE_DEFINITIONS = os.path.join(os.path.dirname(os.path.dirname(
+    __file__)), "shared", "macros-ansible.jinja")
+JINJA_MACROS_OVAL_DEFINITIONS = os.path.join(os.path.dirname(os.path.dirname(
+    __file__)), "shared", "macros-oval.jinja")
 
 xml_version = """<?xml version="1.0" encoding="UTF-8"?>"""
 
@@ -21,6 +25,8 @@ datastream_namespace = "http://scap.nist.gov/schema/scap/source/1.2"
 ocil_namespace = "http://scap.nist.gov/schema/ocil/2.0"
 oval_footer = "</oval_definitions>"
 oval_namespace = "http://oval.mitre.org/XMLSchema/oval-definitions-5"
+xlink_namespace = "http://www.w3.org/1999/xlink"
+cat_namespace = "urn:oasis:names:tc:entity:xmlns:xml:catalog"
 ocil_cs = "http://scap.nist.gov/schema/ocil/2"
 xccdf_header = xml_version + "<xccdf>"
 xccdf_footer = "</xccdf>"
@@ -29,15 +35,16 @@ ansible_system = "urn:xccdf:fix:script:ansible"
 puppet_system = "urn:xccdf:fix:script:puppet"
 anaconda_system = "urn:redhat:anaconda:pre"
 cce_uri = "https://nvd.nist.gov/cce/index.cfm"
-stig_ns = "http://iase.disa.mil/stigs/Pages/stig-viewing-guidance.aspx"
-stig_refs = 'http://iase.disa.mil/stigs/'
-disa_cciuri = "http://iase.disa.mil/stigs/cci/Pages/index.aspx"
-disa_srguri = "http://iase.disa.mil/stigs/srgs/Pages/index.aspx"
+stig_ns = "https://public.cyber.mil/stigs/srg-stig-tools/"
+stig_refs = 'https://public.cyber.mil/stigs/'
+disa_cciuri = "https://public.cyber.mil/stigs/cci/"
 ssg_version_uri = \
     "https://github.com/OpenSCAP/scap-security-guide/releases/latest"
 OSCAP_VENDOR = "org.ssgproject"
 OSCAP_DS_STRING = "xccdf_%s.content_benchmark_" % OSCAP_VENDOR
+OSCAP_PROFILE = "xccdf_%s.content_profile_" % OSCAP_VENDOR
 OSCAP_GROUP = "xccdf_%s.content_group_" % OSCAP_VENDOR
+OSCAP_RULE = "xccdf_%s.content_rule_" % OSCAP_VENDOR
 OSCAP_GROUP_PCIDSS = "xccdf_%s.content_group_pcidss-req" % OSCAP_VENDOR
 OSCAP_GROUP_VAL = "xccdf_%s.content_group_values" % OSCAP_VENDOR
 OSCAP_GROUP_NON_PCI = "xccdf_%s.content_group_non-pci-dss" % OSCAP_VENDOR
@@ -103,7 +110,8 @@ FULL_NAME_TO_PRODUCT_MAPPING = {
     "Ubuntu 14.04": "ubuntu1404",
     "Ubuntu 16.04": "ubuntu1604",
     "Ubuntu 18.04": "ubuntu1804",
-    "WRLinux": "wrlinux",
+    "WRLinux 8": "wrlinux8",
+    "WRLinux 1019": "wrlinux1019",
 }
 
 PRODUCT_TO_CPE_MAPPING = {
@@ -163,8 +171,6 @@ PRODUCT_TO_CPE_MAPPING = {
     ],
     "fuse6": [
         "cpe:/a:redhat:jboss_fuse:6.0",
-        "cpe:/a:redhat:jboss_fuse:6.1.0",
-        "cpe:/a:redhat:jboss_fuse_service_works:6.0",
     ],
     "jre": [
         "cpe:/a:oracle:jre:",
@@ -223,8 +229,11 @@ PRODUCT_TO_CPE_MAPPING = {
     "ubuntu1804": [
         "cpe:/o:canonical:ubuntu_linux:18.04",
     ],
-    "wrlinux": [
+    "wrlinux8": [
         "cpe:/o:windriver:wrlinux:8",
+    ],
+    "wrlinux1019": [
+        "cpe:/o:windriver:wrlinux:1019",
     ],
 }
 
@@ -243,7 +252,7 @@ MULTI_PLATFORM_MAPPING = {
     "multi_platform_rhv": ["rhv4"],
     "multi_platform_sle": ["sle11", "sle12"],
     "multi_platform_ubuntu": ["ubuntu1404", "ubuntu1604", "ubuntu1804"],
-    "multi_platform_wrlinux": ["wrlinux"],
+    "multi_platform_wrlinux": ["wrlinux8", "wrlinux1019"],
 }
 
 RHEL_CENTOS_CPE_MAPPING = {
@@ -255,7 +264,6 @@ RHEL_CENTOS_CPE_MAPPING = {
 RHEL_SL_CPE_MAPPING = {
     "cpe:/o:redhat:enterprise_linux:6": "cpe:/o:scientificlinux:scientificlinux:6",
     "cpe:/o:redhat:enterprise_linux:7": "cpe:/o:scientificlinux:scientificlinux:7",
-    "cpe:/o:redhat:enterprise_linux:8": "cpe:/o:scientificlinux:scientificlinux:8",
 }
 
 CENTOS_NOTICE = \
@@ -377,10 +385,12 @@ OCILREFATTR_TO_TAG = {
 XCCDF_PLATFORM_TO_CPE = {
     "machine": "cpe:/a:machine",
     "container": "cpe:/a:container",
+    "gdm": "cpe:/a:gdm",
     "libuser": "cpe:/a:libuser",
     "nss-pam-ldapd": "cpe:/a:nss-pam-ldapd",
     "pam": "cpe:/a:pam",
     "shadow-utils": "cpe:/a:shadow-utils",
+    "sssd": "cpe:/a:sssd",
     "systemd": "cpe:/a:systemd",
     "yum": "cpe:/a:yum",
     "yum_or_zypper": "cpe:/a:yum_or_zypper",

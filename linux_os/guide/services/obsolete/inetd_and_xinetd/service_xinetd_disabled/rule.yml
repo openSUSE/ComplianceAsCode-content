@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,ol7,ol8
+prodtype: rhel6,rhel7,rhel8,ol7,ol8,rhv4
 
 title: 'Disable xinetd Service'
 
@@ -38,3 +38,5 @@ ocil: |-
     If network services are using the xinetd service, this is not applicable.
     <br /><br />
     {{{ ocil_service_disabled(service="xinetd") }}}
+
+platform: machine

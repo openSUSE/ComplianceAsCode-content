@@ -2,14 +2,14 @@ documentation_complete: true
 
 prodtype: ocp3
 
-title: 'Configure the Audit Log Maxage'
+title: 'Configure the Audit Log Maximum Retention Days (maximumFileRetentionDays)'
 
 description: |-
     To configure audit log retention, edit the API Server pod specification file
     <tt>/etc/origin/master/master-config.yaml</tt> on the master node(s) and set
     the <tt>maximumFileRetentionDays</tt> parameter to 30 or as appropriate number of days:
     <pre>auditConfig:
-      auditFilePath: "/var/log/audit-ocp.log"
+      auditFilePath: "/etc/origin/master/audit-ocp.log"
       enabled: true
       maximumFileRetentionDays: 30
       maximumFileSizeMegabytes: 10
@@ -22,7 +22,7 @@ rationale: |-
 severity: medium
 
 references:
-    cis: 1.1.23
+    cis: 1.1.16
 
 ocil_clause: '<tt>maximumFileRetentionDays</tt> is set less than <tt>30</tt> or as appropriate'
 

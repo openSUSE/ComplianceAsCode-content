@@ -257,6 +257,16 @@ macro(ssg_build_ansible_playbooks PRODUCT)
         generate-${PRODUCT}-ansible-playbooks
         DEPENDS "${ANSIBLE_PLAYBOOKS_DIR}"
     )
+    add_test(
+        NAME "${PRODUCT}-ansible-playbooks-generated-for-all-rules"
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests/ansible_playbooks_generated_for_all_rules.py" --build-dir "${CMAKE_BINARY_DIR}" --product "${PRODUCT}"
+    )
+    if("${PRODUCT}" MATCHES "rhel")
+        add_test(
+            NAME "${PRODUCT}-ansible-assert-playbooks-schema"
+            COMMAND sh -c "${PYTHON_EXECUTABLE} $@" _ "${CMAKE_SOURCE_DIR}/tests/assert_ansible_schema.py" ${CMAKE_BINARY_DIR}/${PRODUCT}/playbooks/all/*
+        )
+    endif()
 endmacro()
 
 macro(ssg_build_remediations PRODUCT)
@@ -267,21 +277,21 @@ macro(ssg_build_remediations PRODUCT)
     # older openscap causes syntax errors, see https://github.com/OpenSCAP/openscap/pull/977
     if (ANSIBLE_PLAYBOOK_EXECUTABLE AND "${OSCAP_VERSION}" VERSION_GREATER "1.2.16")
         add_test(
-            NAME "ansible-role-syntax-check-${PRODUCT}"
-            COMMAND "${CMAKE_SOURCE_DIR}/tests/ansible_playbook_check.sh" "${ANSIBLE_PLAYBOOK_EXECUTABLE}" "${CMAKE_BINARY_DIR}/roles" "${PRODUCT}"
+            NAME "ansible-playbook-syntax-check-${PRODUCT}"
+            COMMAND "${CMAKE_SOURCE_DIR}/tests/ansible_playbook_check.sh" "${ANSIBLE_PLAYBOOK_EXECUTABLE}" "${CMAKE_BINARY_DIR}/ansible" "${PRODUCT}"
         )
     endif()
     if (ANSIBLE_CHECKS)
         if (ANSIBLE_LINT_EXECUTABLE AND "${OSCAP_VERSION}" VERSION_GREATER "1.2.16")
             add_test(
-                NAME "ansible-role-ansible-lint-check-${PRODUCT}"
-                COMMAND "${CMAKE_SOURCE_DIR}/tests/ansible_playbook_check.sh" "${ANSIBLE_LINT_EXECUTABLE}" "${CMAKE_BINARY_DIR}/roles" "${PRODUCT}"
+                NAME "ansible-playbook-ansible-lint-check-${PRODUCT}"
+                COMMAND "${CMAKE_SOURCE_DIR}/tests/ansible_playbook_check.sh" "${ANSIBLE_LINT_EXECUTABLE}" "${CMAKE_BINARY_DIR}/ansible" "${PRODUCT}"
             )
         endif()
         if (YAMLLINT_EXECUTABLE AND "${OSCAP_VERSION}" VERSION_GREATER "1.2.16")
             add_test(
-                NAME "ansible-role-yamllint-check-${PRODUCT}"
-                COMMAND "${CMAKE_SOURCE_DIR}/tests/ansible_playbook_check.sh" "${YAMLLINT_EXECUTABLE}" "${CMAKE_BINARY_DIR}/roles" "${PRODUCT}" "${CMAKE_SOURCE_DIR}/tests/yamllint_config.yml"
+                NAME "ansible-playbook-yamllint-check-${PRODUCT}"
+                COMMAND "${CMAKE_SOURCE_DIR}/tests/ansible_playbook_check.sh" "${YAMLLINT_EXECUTABLE}" "${CMAKE_BINARY_DIR}/ansible" "${PRODUCT}" "${CMAKE_SOURCE_DIR}/tests/yamllint_config.yml"
             )
         endif()
     endif()
@@ -519,6 +529,7 @@ macro(ssg_build_sds PRODUCT)
     if("${PRODUCT}" MATCHES "rhel(6|7)")
         add_custom_command(
             OUTPUT "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+            OUTPUT "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             # use --skip-valid here to avoid repeatedly validating everything
             COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-compose --skip-valid "ssg-${PRODUCT}-xccdf-1.2.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
@@ -526,7 +537,9 @@ macro(ssg_build_sds PRODUCT)
             COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-add --skip-valid "ssg-${PRODUCT}-cpe-dictionary.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
             COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-add --skip-valid "ssg-${PRODUCT}-pcidss-xccdf-1.2.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
             COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/sds_move_ocil_to_checks.py" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+            COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/update_sds_to_scap_1_3.py" --input "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml" --output "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
             COMMAND "${XMLLINT_EXECUTABLE}" --nsclean --format --output "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+            COMMAND "${XMLLINT_EXECUTABLE}" --nsclean --format --output "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
             DEPENDS generate-ssg-${PRODUCT}-xccdf-1.2.xml
             DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf-1.2.xml"
             DEPENDS generate-ssg-${PRODUCT}-oval.xml
@@ -538,18 +551,21 @@ macro(ssg_build_sds PRODUCT)
             DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-cpe-oval.xml"
             DEPENDS generate-ssg-${PRODUCT}-pcidss-xccdf-1.2.xml
             DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-pcidss-xccdf-1.2.xml"
-            COMMENT "[${PRODUCT}-content] generating ssg-${PRODUCT}-ds.xml"
+            COMMENT "[${PRODUCT}-content] generating ssg-${PRODUCT}-ds.xml and ssg-${PRODUCT}-ds-1.3.xml"
         )
     else()
         add_custom_command(
             OUTPUT "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+            OUTPUT "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             # use --skip-valid here to avoid repeatedly validating everything
             COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-compose --skip-valid "ssg-${PRODUCT}-xccdf-1.2.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
             COMMAND "${SED_EXECUTABLE}" -i 's/schematron-version="[0-9].[0-9]"/schematron-version="1.2"/' "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
             COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-add --skip-valid "ssg-${PRODUCT}-cpe-dictionary.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
             COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/sds_move_ocil_to_checks.py" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+            COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/update_sds_to_scap_1_3.py" --input "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml" --output "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
             COMMAND "${XMLLINT_EXECUTABLE}" --nsclean --format --output "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+            COMMAND "${XMLLINT_EXECUTABLE}" --nsclean --format --output "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml" "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
             DEPENDS generate-ssg-${PRODUCT}-xccdf-1.2.xml
             DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf-1.2.xml"
             DEPENDS generate-ssg-${PRODUCT}-oval.xml
@@ -559,17 +575,22 @@ macro(ssg_build_sds PRODUCT)
             DEPENDS generate-ssg-${PRODUCT}-cpe-dictionary.xml
             DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-cpe-dictionary.xml"
             DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-cpe-oval.xml"
-            COMMENT "[${PRODUCT}-content] generating ssg-${PRODUCT}-ds.xml"
+            COMMENT "[${PRODUCT}-content] generating ssg-${PRODUCT}-ds.xml and ssg-${PRODUCT}-ds-1.3.xml"
         )
     endif()
     add_custom_target(
         generate-ssg-${PRODUCT}-ds.xml
         DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+        DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
     )
 
     add_test(
         NAME "validate-ssg-${PRODUCT}-ds.xml"
         COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-validate "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+    )
+    add_test(
+        NAME "validate-ssg-${PRODUCT}-ds-1.3.xml"
+        COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-validate "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
     )
 endmacro()
 
@@ -592,36 +613,67 @@ macro(ssg_build_html_guides PRODUCT)
     set(SSG_HTML_GUIDE_FILE_LIST "${SSG_HTML_GUIDE_FILE_LIST};${CMAKE_BINARY_DIR}/guides/ssg-${PRODUCT}-guide-index.html" PARENT_SCOPE)
 endmacro()
 
-macro(ssg_build_remediation_roles PRODUCT TEMPLATE EXTENSION)
+macro(ssg_build_profile_bash_scripts PRODUCT)
     add_custom_command(
-        OUTPUT "${CMAKE_BINARY_DIR}/roles/all-roles-${PRODUCT}-${EXTENSION}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/roles"
-        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/build_all_remediation_roles.py" --input "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --output "${CMAKE_BINARY_DIR}/roles" --template "${TEMPLATE}" --extension "${EXTENSION}" build
-        COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_BINARY_DIR}/roles/all-roles-${PRODUCT}-${EXTENSION}"
+        OUTPUT "${CMAKE_BINARY_DIR}/bash/all-profile-bash-scripts-${PRODUCT}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bash"
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/build_profile_remediations.py" --input "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --output "${CMAKE_BINARY_DIR}/bash" --template "urn:xccdf:fix:script:sh" --extension "sh" build
+        COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_BINARY_DIR}/bash/all-profile-bash-scripts-${PRODUCT}"
         DEPENDS generate-ssg-${PRODUCT}-xccdf.xml
         DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
-        COMMENT "[${PRODUCT}-roles] generating ${TEMPLATE} remediation roles for all profiles in ssg-${PRODUCT}-xccdf.xml"
+        COMMENT "[${PRODUCT}-bash-scripts] generating Bash remediation scripts for all profiles in ssg-${PRODUCT}-xccdf.xml"
     )
     add_custom_target(
-        generate-all-roles-${PRODUCT}-${EXTENSION}
-        DEPENDS "${CMAKE_BINARY_DIR}/roles/all-roles-${PRODUCT}-${EXTENSION}"
+        generate-all-profile-bash-scripts-${PRODUCT}
+        DEPENDS "${CMAKE_BINARY_DIR}/bash/all-profile-bash-scripts-${PRODUCT}"
+    )
+endmacro()
+
+macro(ssg_build_profile_playbooks PRODUCT)
+    add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/ansible/all-profile-playbooks-${PRODUCT}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/ansible"
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/build_profile_remediations.py" --input "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --output "${CMAKE_BINARY_DIR}/ansible" --template "urn:xccdf:fix:script:ansible" --extension "yml" build
+        COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_BINARY_DIR}/ansible/all-profile-playbooks-${PRODUCT}"
+        DEPENDS generate-ssg-${PRODUCT}-xccdf.xml
+        DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
+        COMMENT "[${PRODUCT}-playbooks] generating Ansible Playbooks for all profiles in ssg-${PRODUCT}-xccdf.xml"
+    )
+    add_custom_target(
+        generate-all-profile-playbooks-${PRODUCT}
+        DEPENDS "${CMAKE_BINARY_DIR}/ansible/all-profile-playbooks-${PRODUCT}"
     )
 endmacro()
 
 macro(ssg_make_stats_for_product PRODUCT)
     add_custom_target(${PRODUCT}-stats
         COMMAND ${CMAKE_COMMAND} -E echo "Benchmark statistics for '${PRODUCT}':"
-        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/profile_stats.py" --benchmark "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --profile all
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/profile_tool.py" stats --benchmark "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --profile all
         DEPENDS generate-ssg-${PRODUCT}-xccdf.xml
         DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
         COMMENT "[${PRODUCT}-stats] generating benchmark statistics"
     )
     add_custom_target(${PRODUCT}-profile-stats
         COMMAND ${CMAKE_COMMAND} -E echo "Per profile statistics for '${PRODUCT}':"
-        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/profile_stats.py" --benchmark "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/profile_tool.py" stats --benchmark "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
         DEPENDS generate-ssg-${PRODUCT}-xccdf.xml
         DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
         COMMENT "[${PRODUCT}-profile-stats] generating per profile statistics"
+    )
+endmacro()
+
+macro(ssg_make_html_stats_for_product PRODUCT)
+    add_custom_target(${PRODUCT}-html-stats
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/profile_tool.py" stats --format html --benchmark "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --profile all --output "${CMAKE_BINARY_DIR}/${PRODUCT}/product-statistics/"
+        DEPENDS generate-ssg-${PRODUCT}-xccdf.xml
+        DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
+        COMMENT "[${PRODUCT}-html-stats] generating benchmark html statistics"
+    )
+    add_custom_target(${PRODUCT}-html-profile-stats
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/profile_tool.py" stats --format html --benchmark "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml" --output "${CMAKE_BINARY_DIR}/${PRODUCT}/profile-statistics/"
+        DEPENDS generate-ssg-${PRODUCT}-xccdf.xml
+        DEPENDS "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-xccdf.xml"
+        COMMENT "[${PRODUCT}-html-profile-stats] generating per profile html statistics"
     )
 endmacro()
 
@@ -672,32 +724,43 @@ macro(ssg_build_product PRODUCT)
     add_dependencies(zipfile "generate-ssg-${PRODUCT}-ds.xml")
 
     ssg_build_html_guides(${PRODUCT})
-    ssg_build_remediation_roles(${PRODUCT} "urn:xccdf:fix:script:ansible" "yml")
-    ssg_build_remediation_roles(${PRODUCT} "urn:xccdf:fix:script:sh" "sh")
+    ssg_build_profile_playbooks(${PRODUCT})
+    ssg_build_profile_bash_scripts(${PRODUCT})
 
     add_custom_target(
         ${PRODUCT}-guides
         DEPENDS generate-ssg-${PRODUCT}-guide-index.html
     )
     add_dependencies(${PRODUCT} ${PRODUCT}-guides)
+    add_dependencies(zipfile ${PRODUCT}-guides)
 
     add_custom_target(
         ${PRODUCT}-tables
         # dependencies are added later using add_dependency
     )
     add_dependencies(${PRODUCT} ${PRODUCT}-tables)
+    add_dependencies(zipfile ${PRODUCT}-tables)
 
     add_custom_target(
-        ${PRODUCT}-roles
-        DEPENDS generate-all-roles-${PRODUCT}-yml
-        DEPENDS generate-all-roles-${PRODUCT}-sh
+        ${PRODUCT}-profile-bash-scripts
+        DEPENDS generate-all-profile-bash-scripts-${PRODUCT}
     )
-    add_dependencies(${PRODUCT} ${PRODUCT}-roles)
-    add_dependencies(zipfile "${PRODUCT}-roles")
+    add_custom_target(
+        ${PRODUCT}-profile-playbooks
+        DEPENDS generate-all-profile-playbooks-${PRODUCT}
+    )
+    add_dependencies(${PRODUCT} ${PRODUCT}-profile-bash-scripts)
+    add_dependencies(${PRODUCT} ${PRODUCT}-profile-playbooks)
+    add_dependencies(zipfile ${PRODUCT}-profile-bash-scripts)
+    add_dependencies(zipfile ${PRODUCT}-profile-playbooks)
 
     ssg_make_stats_for_product(${PRODUCT})
     add_dependencies(stats ${PRODUCT}-stats)
     add_dependencies(profile-stats ${PRODUCT}-profile-stats)
+    ssg_make_html_stats_for_product(${PRODUCT})
+    add_dependencies(html-stats ${PRODUCT}-html-stats)
+    add_dependencies(html-profile-stats ${PRODUCT}-html-profile-stats)
+
     add_dependencies(man_page ${PRODUCT})
 
     if (SSG_SEPARATE_SCAP_FILES_ENABLED)
@@ -714,6 +777,8 @@ macro(ssg_build_product PRODUCT)
     endif()
 
     install(FILES "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds.xml"
+        DESTINATION "${SSG_CONTENT_INSTALL_DIR}")
+    install(FILES "${CMAKE_BINARY_DIR}/ssg-${PRODUCT}-ds-1.3.xml"
         DESTINATION "${SSG_CONTENT_INSTALL_DIR}")
 
     # This is a common cmake trick, we need the globbing to happen at build time
@@ -734,7 +799,7 @@ macro(ssg_build_product PRODUCT)
     )
     install(
         CODE "
-        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/roles/ssg-${PRODUCT}-role-*.yml\") \n
+        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/ansible/${PRODUCT}-playbook-*.yml\") \n
         if(NOT IS_ABSOLUTE ${SSG_ANSIBLE_ROLE_INSTALL_DIR})
             file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${SSG_ANSIBLE_ROLE_INSTALL_DIR}\"
                 TYPE FILE FILES \${ROLE_FILES})
@@ -746,7 +811,7 @@ macro(ssg_build_product PRODUCT)
     )
     install(
         CODE "
-        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/roles/ssg-${PRODUCT}-role-*.sh\") \n
+        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/bash/${PRODUCT}-script-*.sh\") \n
         if(NOT IS_ABSOLUTE ${SSG_BASH_ROLE_INSTALL_DIR})
             file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${SSG_BASH_ROLE_INSTALL_DIR}\"
                 TYPE FILE FILES \${ROLE_FILES})
@@ -785,19 +850,27 @@ macro(ssg_build_derivative_product ORIGINAL SHORTNAME DERIVATIVE)
 
     add_custom_command(
         OUTPUT "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds.xml"
+        OUTPUT "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds-1.3.xml"
         COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/enable_derivatives.py" --enable-${SHORTNAME} -i "${CMAKE_BINARY_DIR}/ssg-${ORIGINAL}-ds.xml" -o "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds.xml"
+        COMMAND env "PYTHONPATH=$ENV{PYTHONPATH}" "${PYTHON_EXECUTABLE}" "${SSG_BUILD_SCRIPTS}/enable_derivatives.py" --enable-${SHORTNAME} -i "${CMAKE_BINARY_DIR}/ssg-${ORIGINAL}-ds-1.3.xml" -o "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds-1.3.xml"
         DEPENDS generate-ssg-${ORIGINAL}-ds.xml
         DEPENDS "${CMAKE_BINARY_DIR}/ssg-${ORIGINAL}-ds.xml"
+        DEPENDS "${CMAKE_BINARY_DIR}/ssg-${ORIGINAL}-ds-1.3.xml"
         DEPENDS "${SSG_BUILD_SCRIPTS}/enable_derivatives.py"
-        COMMENT "[${DERIVATIVE}-content] generating ssg-${DERIVATIVE}-ds.xml"
+        COMMENT "[${DERIVATIVE}-content] generating ssg-${DERIVATIVE}-ds.xml and ssg-${DERIVATIVE}-ds-1.3.xml"
     )
     add_custom_target(
         generate-ssg-${DERIVATIVE}-ds.xml
         DEPENDS "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds.xml"
+        DEPENDS "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds-1.3.xml"
     )
     add_test(
         NAME "validate-ssg-${DERIVATIVE}-ds.xml"
         COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-validate "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds.xml"
+    )
+    add_test(
+        NAME "validate-ssg-${DERIVATIVE}-ds-1.3.xml"
+        COMMAND "${OPENSCAP_OSCAP_EXECUTABLE}" ds sds-validate "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds-1.3.xml"
     )
 
     add_custom_target(${DERIVATIVE} ALL)
@@ -813,8 +886,8 @@ macro(ssg_build_derivative_product ORIGINAL SHORTNAME DERIVATIVE)
     add_dependencies(zipfile "generate-ssg-${DERIVATIVE}-ds.xml")
 
     ssg_build_html_guides(${DERIVATIVE})
-    ssg_build_remediation_roles(${DERIVATIVE} "urn:xccdf:fix:script:ansible" "yml")
-    ssg_build_remediation_roles(${DERIVATIVE} "urn:xccdf:fix:script:sh" "sh")
+    ssg_build_profile_playbooks(${DERIVATIVE})
+    ssg_build_profile_bash_scripts(${DERIVATIVE})
 
     add_custom_target(
         ${DERIVATIVE}-guides
@@ -823,11 +896,15 @@ macro(ssg_build_derivative_product ORIGINAL SHORTNAME DERIVATIVE)
     add_dependencies(${DERIVATIVE} ${DERIVATIVE}-guides)
 
     add_custom_target(
-        ${DERIVATIVE}-roles
-        DEPENDS generate-all-roles-${DERIVATIVE}-yml
-        DEPENDS generate-all-roles-${DERIVATIVE}-sh
+        ${DERIVATIVE}-profile-bash-scripts
+        DEPENDS generate-all-profile-bash-scripts-${DERIVATIVE}
     )
-    add_dependencies(${DERIVATIVE} ${DERIVATIVE}-roles)
+    add_custom_target(
+        ${DERIVATIVE}-profile-playbooks
+        DEPENDS generate-all-profile-playbooks-${DERIVATIVE}
+    )
+    add_dependencies(${DERIVATIVE} ${DERIVATIVE}-profile-bash-scripts)
+    add_dependencies(${DERIVATIVE} ${DERIVATIVE}-profile-playbooks)
 
     if (SSG_SEPARATE_SCAP_FILES_ENABLED)
         install(FILES "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-xccdf.xml"
@@ -835,6 +912,8 @@ macro(ssg_build_derivative_product ORIGINAL SHORTNAME DERIVATIVE)
     endif()
 
     install(FILES "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds.xml"
+        DESTINATION "${SSG_CONTENT_INSTALL_DIR}")
+    install(FILES "${CMAKE_BINARY_DIR}/ssg-${DERIVATIVE}-ds-1.3.xml"
         DESTINATION "${SSG_CONTENT_INSTALL_DIR}")
 
     # This is a common cmake trick, we need the globbing to happen at build time
@@ -853,7 +932,7 @@ macro(ssg_build_derivative_product ORIGINAL SHORTNAME DERIVATIVE)
     )
     install(
         CODE "
-        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/roles/ssg-${DERIVATIVE}-role-*.yml\") \n
+        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/ansible/${DERIVATIVE}-playbook-*.yml\") \n
         if(NOT IS_ABSOLUTE ${SSG_ANSIBLE_ROLE_INSTALL_DIR})
             file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${SSG_ANSIBLE_ROLE_INSTALL_DIR}\"
                 TYPE FILE FILES \${ROLE_FILES})
@@ -865,7 +944,7 @@ macro(ssg_build_derivative_product ORIGINAL SHORTNAME DERIVATIVE)
     )
     install(
         CODE "
-        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/roles/ssg-${DERIVATIVE}-role-*.sh\") \n
+        file(GLOB ROLE_FILES \"${CMAKE_BINARY_DIR}/bash/${DERIVATIVE}-script-*.sh\") \n
         if(NOT IS_ABSOLUTE ${SSG_BASH_ROLE_INSTALL_DIR})
             file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${SSG_BASH_ROLE_INSTALL_DIR}\"
                 TYPE FILE FILES \${ROLE_FILES})
@@ -1099,6 +1178,10 @@ macro(ssg_define_guide_and_table_tests)
                 COMMAND "${GREP_EXECUTABLE}" "-zv" "</thead>[[:space:]]*</table>" "${TABLE_FILE}"
             )
         endforeach()
+        add_test(
+            NAME "unique-cces"
+	    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_cces_unique.sh"
+        )
     endif()
 endmacro()
 
@@ -1111,18 +1194,22 @@ macro(ssg_build_zipfile ZIPNAME)
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/Contributors.md" "zipfile/${ZIPNAME}"
         COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "zipfile/${ZIPNAME}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "zipfile/${ZIPNAME}/kickstart"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/rhel{6,7}/kickstart/*-ks.cfg" "zipfile/${ZIPNAME}/kickstart"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/ssg-*-ds.xml" "zipfile/${ZIPNAME}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "zipfile/${ZIPNAME}/roles"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/roles/*.sh" "zipfile/${ZIPNAME}/roles"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/roles/*.yml" "zipfile/${ZIPNAME}/roles"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_SOURCE_DIR}/rhel*/kickstart/*-ks.cfg" -DDEST="zipfile/${ZIPNAME}/kickstart" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ssg-*-ds.xml" -DDEST="zipfile/${ZIPNAME}" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ssg-*-ds-1.3.xml" -DDEST="zipfile/${ZIPNAME}" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "zipfile/${ZIPNAME}/bash"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/bash/*.sh" -DDEST="zipfile/${ZIPNAME}/bash" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "zipfile/${ZIPNAME}/ansible"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ansible/*.yml" -DDEST="zipfile/${ZIPNAME}/ansible" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
         COMMAND ${CMAKE_COMMAND} -E make_directory "zipfile/${ZIPNAME}/guides"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/guides/*" "zipfile/${ZIPNAME}/guides"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/guides/*" -DDEST="zipfile/${ZIPNAME}/guides" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
         COMMAND ${CMAKE_COMMAND} -E make_directory "zipfile/${ZIPNAME}/tables"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/tables/*" "zipfile/${ZIPNAME}/tables"
+        COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/tables/*" -DDEST="zipfile/${ZIPNAME}/tables" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
         COMMAND ${CMAKE_COMMAND} -E chdir "zipfile" ${CMAKE_COMMAND} -E tar "cvf" "${ZIPNAME}.zip" --format=zip "${ZIPNAME}"
         COMMENT "Building zipfile at ${CMAKE_BINARY_DIR}/zipfile/${ZIPNAME}.zip"
         )
+endmacro()
+macro(ssg_build_zipfile_target ZIPNAME)
     add_custom_target(
         zipfile
         DEPENDS "${CMAKE_BINARY_DIR}/zipfile/${ZIPNAME}.zip"
@@ -1130,15 +1217,68 @@ macro(ssg_build_zipfile ZIPNAME)
 endmacro()
 
 macro(ssg_build_nist_zipfile ZIPNAME)
-    add_custom_command(
-        OUTPUT "${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"
-        COMMAND ${CMAKE_COMMAND} -E remove_directory "nist-zipfile/"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "nist-zipfile/${ZIPNAME}"
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/ssg-rhel{6,7}-ds.xml" "nist-zipfile/${ZIPNAME}"
-        COMMAND ${CMAKE_COMMAND} -E chdir "nist-zipfile" ${CMAKE_COMMAND} -E tar "cvf" "${ZIPNAME}-nist.zip" --format=zip "${ZIPNAME}"
-        COMMENT "Building NIST zipfile at ${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"
-        )
+    # When SCAP1.2 zipfiles are needed no more, these custom commands can be unified
+    if("${ZIPNAME}" MATCHES "SCAP-1.2")
+        # Zip only the SCAP1.2 datastream
+        add_custom_command(
+            OUTPUT "${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "nist-zipfile/"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "nist-zipfile/${ZIPNAME}"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ssg-rh*-ds.xml" -DDEST="nist-zipfile/${ZIPNAME}" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ssg-ocp*-ds.xml" -DDEST="nist-zipfile/${ZIPNAME}" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/bash"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/bash/ssg-rh*.sh" -DDEST="nist-zipfile/${ZIPNAME}/bash" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/bash/ssg-ocp*.sh" -DDEST="nist-zipfile/${ZIPNAME}/bash" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/ansible"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ansible/ssg-rh*.yml" -DDEST="nist-zipfile/${ZIPNAME}/ansible" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ansible/ssg-ocp*.yml" -DDEST="nist-zipfile/${ZIPNAME}/ansible" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/guides"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/guides/ssg-rh*" -DDEST="nist-zipfile/${ZIPNAME}/guides" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/guides/ssg-ocp*" -DDEST="nist-zipfile/${ZIPNAME}/guides" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/tables"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/tables/table-rh*" -DDEST="nist-zipfile/${ZIPNAME}/tables" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/tables/table-ocp*" -DDEST="nist-zipfile/${ZIPNAME}/tables" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E chdir "nist-zipfile" ${CMAKE_COMMAND} -E tar "cvf" "${ZIPNAME}-nist.zip" --format=zip "${ZIPNAME}"
+            COMMENT "Building NIST zipfile at ${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"
+            DEPENDS ocp3
+            DEPENDS rhel6
+            DEPENDS rhel7
+            DEPENDS rhel8
+            DEPENDS rhosp13
+            DEPENDS rhv4
+            )
+    else()
+        # Zip only the SCAP 1.3 datastream
+        add_custom_command(
+            OUTPUT "${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "nist-zipfile/"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "nist-zipfile/${ZIPNAME}"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ssg-rh*-ds-1.3.xml" -DDEST="nist-zipfile/${ZIPNAME}" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ssg-ocp*-ds-1.3.xml" -DDEST="nist-zipfile/${ZIPNAME}" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/bash"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/bash/ssg-rh*.sh" -DDEST="nist-zipfile/${ZIPNAME}/bash" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/bash/ssg-ocp*.sh" -DDEST="nist-zipfile/${ZIPNAME}/bash" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/ansible"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ansible/ssg-rh*.yml" -DDEST="nist-zipfile/${ZIPNAME}/ansible" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/ansible/ssg-ocp*.yml" -DDEST="nist-zipfile/${ZIPNAME}/ansible" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/guides"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/guides/ssg-rh*" -DDEST="nist-zipfile/${ZIPNAME}/guides" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/guides/ssg-ocp*" -DDEST="nist-zipfile/${ZIPNAME}/guides" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "nist-zipfile/${ZIPNAME}/tables"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/tables/table-rh*" -DDEST="nist-zipfile/${ZIPNAME}/tables" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -DSOURCE="${CMAKE_BINARY_DIR}/tables/table-ocp*" -DDEST="nist-zipfile/${ZIPNAME}/tables" -P "${CMAKE_SOURCE_DIR}/cmake/CopyFiles.cmake"
+            COMMAND ${CMAKE_COMMAND} -E chdir "nist-zipfile" ${CMAKE_COMMAND} -E tar "cvf" "${ZIPNAME}-nist.zip" --format=zip "${ZIPNAME}"
+            COMMENT "Building NIST zipfile at ${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"
+            DEPENDS ocp3
+            DEPENDS rhel6
+            DEPENDS rhel7
+            DEPENDS rhel8
+            DEPENDS rhosp13
+            DEPENDS rhv4
+            )
+    endif()
     add_custom_target(
         nist-zipfile
         DEPENDS "${CMAKE_BINARY_DIR}/nist-zipfile/${ZIPNAME}-nist.zip"

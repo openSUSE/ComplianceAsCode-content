@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,sle12
+prodtype: rhel6,rhel7,rhel8,fedora,rhv4,sle12
 
 title: 'Assign Expiration Date to Temporary Accounts'
 
@@ -33,7 +33,7 @@ severity: unknown
 
 identifiers:
     cce@rhel6: 27474-6
-    cce@rhel7: 27498-5
+    cce@rhel7: 81000-2
 
 references:
     stigid@rhel6: RHEL-06-000297

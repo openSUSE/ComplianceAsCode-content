@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8
+prodtype: rhel7,rhel8,rhv4
 
 title: 'Disable the ssh_sysadm_login SELinux Boolean'
 
@@ -10,6 +10,9 @@ description: |-
     {{{ describe_sebool_disable(sebool="ssh_sysadm_login") }}}
 
 rationale: ""
+
+references:
+    anssi: NT28(R67)
 
 severity: medium
 

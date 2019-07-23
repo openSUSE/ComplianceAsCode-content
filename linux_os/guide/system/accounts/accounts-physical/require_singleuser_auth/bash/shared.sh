@@ -1,10 +1,10 @@
-# platform = multi_platform_rhel,multi_platform_fedora,multi_platform_ol,multi_platform_rhv
+# platform = multi_platform_wrlinux,multi_platform_rhel,multi_platform_fedora,multi_platform_ol,multi_platform_rhv
 
 {{% if init_system == "systemd" -%}}
 
 service_file="/usr/lib/systemd/system/rescue.service"
 
-{{% if product == "fedora" -%}}
+{{% if product in ["fedora", "rhel8"] -%}}
 sulogin="/usr/lib/systemd/systemd-sulogin-shell"
 {{%- else -%}}
 sulogin="/sbin/sulogin"

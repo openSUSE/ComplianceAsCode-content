@@ -42,7 +42,7 @@ selections:
     - sysctl_kernel_kptr_restrict
     - sysctl_kernel_kexec_load_disabled
     - sysctl_kernel_dmesg_restrict
-    - dconf_use_text_backend
+    - dconf_db_up_to_date
     - dconf_gnome_screensaver_idle_activation_enabled
     - dconf_gnome_screensaver_idle_delay
     - dconf_gnome_screensaver_lock_delay
@@ -65,8 +65,6 @@ selections:
     - sshd_disable_root_login
     - gnome_gdm_disable_automatic_login
     - gnome_gdm_disable_guest_login
-    - sssd_offline_cred_expiration
-    - sssd_memcache_timeout
     - disable_host_auth
     - sshd_disable_gssapi_auth
     - sshd_disable_kerb_auth

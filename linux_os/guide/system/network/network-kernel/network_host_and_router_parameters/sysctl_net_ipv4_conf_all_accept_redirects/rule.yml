@@ -1,8 +1,8 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
-title: 'Configure Kernel Parameter for Accepting ICMP Redirects for All Interfaces'
+title: 'Disable Accepting ICMP Redirects for All IPv4 Interfaces'
 
 description: '{{{ describe_sysctl_option_value(sysctl="net.ipv4.conf.all.accept_redirects", value="0") }}}'
 
@@ -23,6 +23,7 @@ identifiers:
     cce@rhel8: 80917-8
 
 references:
+    anssi: NT28(R22)
     stigid@rhel6: RHEL-06-000084
     srg@rhel6: SRG-OS-999999
     cis: 3.2.2

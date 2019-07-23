@@ -1,4 +1,5 @@
-# SCAP Security Guide Developer Guide
+# ComplianceAsCode Developer Guide
+:rootdir: ../..
 :imagesdir: ./images
 :templatesdir: ../../shared/templates
 :rhel7dir: ../../rhel7/templates/csv
@@ -10,69 +11,97 @@ toc::[]
 
 ## Introduction
 
-This document tries provides information useful for ComplianceAsCode/content project contributors.
+This document tries to provide information useful for ComplianceAsCode/content project contributors.
 We will guide you through the structure of the project.
 We will explain the directory layout, used formats and the build system.
 
 ## Mailing List
 Join the mailing list at https://fedorahosted.org/mailman/listinfo/scap-security-guide.
 
-## Building SCAP Security Guide
+## Building ComplianceAsCode
 
 ### Installing build dependencies
 
-On *Red Hat Enterprise Linux* make sure the packages `cmake`, `openscap-utils`,
-`PyYAML`, `python-jinja2` and their dependencies are installed. We require
-version `1.0.8` or later of `openscap-utils`.
+On *Red Hat Enterprise Linux 6/7* make sure the packages `cmake`, `openscap-utils`,
+`PyYAML`, `python-jinja2` and their dependencies are installed:
 
 ```bash
 yum install cmake make openscap-utils PyYAML python-jinja2
 ```
 
-On *Fedora* the package list is the same, but their names are a bit different:
+On *Red Hat Enterprise Linux 8* and *Fedora* the package list is the same but python2 packages need to be replaced with python3 ones:
 
 ```bash
-dnf install cmake make openscap-utils python3-pyyaml python3-jinja2
+yum install cmake make openscap-utils python3-pyyaml python3-jinja2
 ```
 
 On *Ubuntu* and *Debian*, make sure the packages `libopenscap8`,
-`libxml2-utils`, `xsltproc`, `python-jinja2` and their dependencies are
-installed.
+`libxml2-utils`, `python3-jinja2`, `python3-yaml`, `xsltproc` and their dependencies are
+installed:
 
 ```bash
 apt-get install cmake make expat libopenscap8 libxml2-utils ninja-build python3-jinja2 python3-yaml xsltproc
 ```
 
+IMPORTANT: Version `1.0.8` or later of `openscap-utils` is required to build the content.
+
 (optional) Install git if you want to clone the GitHub repository to get the
 source code:
 
 ```bash
+# Fedora/RHEL
 yum install git
+
+# Ubuntu/Debian
+apt-get install git
 ```
 
 (optional) Install the `ShellCheck` package to perform fix script static analysis:
 
 ```bash
+# Fedora/RHEL
 yum install ShellCheck
+
+# Ubuntu/Debian
+apt-get install shellcheck
 ```
 
 (optional) Install `yamllint` and `ansible-lint` packages to perform Ansible
 playbooks checks. These checks are not enabled by default in CTest, to enable
 them add `-DANSIBLE_CHECKS=ON` option to `cmake`.
 ```bash
+# Fedora/RHEL
 yum install yamllint ansible-lint
+
+# Ubuntu/Debian (to install ansible-lint on Debian you will probably need to
+# enable Debian Backports repository)
+apt-get install yamllint ansible-lint
 ```
 
 (optional) Install the `ninja` build system if you want to use it instead of
 `make` for faster builds:
 
 ```bash
+# Fedora/RHEL
 yum install ninja-build
+
+# Ubuntu/Debian
+apt-get install ninja-build
+```
+
+(optional) Install the `json2html` package if you want to generate HTML report statistics:
+
+```bash
+pip install json2html
+```
+if you are using python3:
+```bash
+pip3 install json2html
 ```
 
 ### Downloading the source code
 
-Download and extract a tarball from the [list of releases](https://github.com/ComplianceAsCode/content/releases):
+Download and extract a tarball from the link:https://github.com/ComplianceAsCode/content/releases[list of releases]:
 
 ```bash
 # change X.Y.Z for desired version
@@ -109,19 +138,19 @@ security content only for *Red Hat Enterprise Linux 7*:
 
 * Take the manual cmake/make approach:
 
-   ```bash
-   cd content/
-   cd build/
-   cmake ../
-   make -j4 rhel7
-   ```
+```bash
+cd content/
+cd build/
+cmake ../
+make -j4 rhel7
+```
 
 * or use the `build_product` script that removes whatever is in the `build` directory and executes the build for you:
 
-   ```bash
-   cd content/
-   ./build_product rhel7
-   ```
+```bash
+cd content/
+./build_product rhel7
+```
 
 (optional) To build only specific content for one specific product:
 
@@ -132,7 +161,8 @@ cmake ../
 make -j4 rhel7-content  # SCAP XML files for RHEL7
 make -j4 rhel7-guides  # HTML guides for RHEL7
 make -j4 rhel7-tables  # HTML tables for RHEL7
-make -j4 rhel7-roles  # remediation roles for RHEL7
+make -j4 rhel7-profile-bash-scripts  # remediation Bash scripts for all RHEL7 profiles
+make -j4 rhel7-profile-playbooks # Ansible Playbooks for all RHEL7 profiles
 make -j4 rhel7  # everything above for RHEL7
 ```
 
@@ -153,6 +183,30 @@ cd build/
 cmake -G Ninja ../
 ninja-build  # depending on the distribution just "ninja" may also work
 ```
+
+(optional) Generate statistics for products and profiles. Some of the statistics generated are: implemented OVAL, bash, ansible for rules, missing CCE, etc:
+
+```bash
+cd content/
+cd build/
+cmake ../
+make -j4 stats # create statistics for all products
+make -j4 profile-stats # create statistics for all profiles in all products
+```
+
+You can also create statistics per product, to do that just prepend the product name (e.g.: `rhel7-stats`) to the make target.
+
+It is possible to generate HTML output by triggering similar command:
+
+```bash
+cd content/
+cd build/
+cmake ../
+make -j4 html-stats # create statistics for all products, as a result <product>/stats.html file is created.
+make -j4 html-profile-stats # create statistics for all profiles in all products, as a result <product>/profile-stats.html file is created
+```
+
+If you want to go deeper into statistics, refer to <<Profile Statistics and Utilities>> section.
 
 ### Build outputs
 
@@ -186,14 +240,14 @@ This file will let the user browse all profiles available for that product.
 The prose guide HTML contains practical, actionable information for auditors
 and administrators.
 
-Spreadsheet HTML tables - potentially useful as the basis for an
-*SRTM document*:
+Spreadsheet HTML tables - potentially useful as the basis for a
+*Security Requirements Traceability Matrix (SRTM) document*:
 
 ```bash
 $ ls -1 tables/table-rhel7-*.html
 ...
-tables/table-rhel7-nistrefs-ospp-rhel7.html
-tables/table-rhel7-nistrefs-stig-rhel7-disa.html
+tables/table-rhel7-nistrefs-ospp.html
+tables/table-rhel7-nistrefs-stig.html
 tables/table-rhel7-pcidssrefs.html
 tables/table-rhel7-srgmap-flat.html
 tables/table-rhel7-srgmap.html
@@ -214,7 +268,7 @@ make -j4
 ctest -j4
 ```
 
-Note: CTest does not run [SSG Test Suite](tests/README.md) which provides simple system of test scenarios for testing profiles and rule remediations.
+Note: CTest does not run link:https://github.com/ComplianceAsCode/content/tree/master/tests[SSG Test Suite] which provides simple system of test scenarios for testing profiles and rule remediations.
 
 ### Installation
 
@@ -284,7 +338,8 @@ make zipfile
 
 ### Build the docker container image
 
-Use a suitable Dockerfile present in the [Dockerfiles](Dockerfiles)
+Use a suitable Dockerfile present in the
+link:https://github.com/ComplianceAsCode/content/tree/master/Dockerfiles[Dockerfiles]
 directory and build the image.
 This will take care of the build environment and all necessary setup.
 
@@ -292,7 +347,7 @@ This will take care of the build environment and all necessary setup.
 docker build --no-cache --file Dockerfile --tag oscap:$(date -u +%Y%m%d%H%M) --tag oscap:latest .
 ```
 
-### Build SSG using the container image
+### Build the content using the container image
 
 To build all the content, run a container without any flags.
 
@@ -315,52 +370,22 @@ docker cp scap-security-guide:/home/oscap/content/build $(pwd)/container_build
 Under the top level directory, there are directories and/or files for different products,
 shared content, documentation, READMEs, Licenses, build files/configuration, etc.
 
-For example:
-
-[source,bash]
-----
-$ ls -1 scap-security-guide
-build
-build_config.yml.in
-build-scripts
-chromium
-cmake
-CMakeLists.txt
-Contributors.md
-Contributors.xml
-debian8
-DISCLAIMER
-Dockerfile
-docs
-eap6
-fedora
-firefox
-fuse6
-jre
-LICENSE
-linux_os
-ocp3
-ol7
-opensuse
-README.md
-rhel6
-rhel7
-rhosp13
-shared
-sle11
-sle12
-tests
-ubuntu1404
-ubuntu1604
-ubuntu1804
-utils
-wrlinux
-----
-
 ===== Important Top Level Directory Descriptions
 
 |===
 |Directory |Description
+
+|`linux_os`
+| Contains security content for Linux operating systems. Contains rules, OVAL checks, Ansible tasks, Bash remediations, etc.
+
+|`applications`
+| Contains security content for applications such as OpenShift or OpenStack. Contains rules, OVAL checks, Ansible tasks, Bash remediations, etc.
+
+|`shared`
+| Contains templates which can generate, Jinja macros, Bash remediation functions.
+
+|`tests`
+| Contains the test suite for content validation and testing, contains also unit tests.
 
 |`build`
 | Can be used to build the content using CMake.
@@ -371,15 +396,14 @@ wrlinux
 |`cmake`
 | Contains the CMake build configuration files.
 
+|`Dockerfiles`
+| Contains Dockerfiles to build content test suite container backends.
+
 |`docs`
-| Contains the Markdown Manuals, MAN pages, etc.
+| Contains the User Guide and Developer Guide, manual page template, etc.
 
-|`shared`
-| Contains content, tools and utilities, scripts, etc. that can be used for
-multiple products.
-
-|`tests`
-| Contains the test suite for content validation and testing.
+|`ssg`
+| Contains Python `ssg` module which is used by most of the scripts in this repository.
 
 |`utils`
 | Miscellaneous scripts used for development but not used by the build system.
@@ -416,6 +440,80 @@ directories.
 
 |===
 
+==== Benchmark Structure/Layout
+
+Benchmarks are directories that contain `benchmark.yml` file.
+We have multiple benchmarks in our project:
+
+|===
+| Name | Location
+| Linux OS | `/linux_os/guide`
+| Applications | `/applications` (Notice no `guide` subdirectory there!)
+| Java Runtime Environment | `/jre/guide`
+| Fuse 6 | `/fuse6/guide`
+| EAP6 | `/eap6/guide`
+| Firefox | `/firefox/guide`
+| Chromium | `/chromium/guide`
+|===
+
+The *Linux OS* benchmark describes Linux Operating System in general.
+This benchmark is used by multiple ComplianceAsCode products, eg. `rhel7`, `fedora`, `ubuntu1404`, `sle11` etc.
+The benchmark is located in `/linux_os/guide`.
+
+The products specify which benchmark they use as a source of content in their `product.yml` file using `benchmark_root` key. For example, `rhel7` product specifies that it uses the Linux OS benchmark.
+
+----
+$ cat rhel7/product.yml
+product: rhel7
+full_name: Red Hat Enterprise Linux 7
+type: platform
+
+benchmark_root: "../linux_os/guide"
+
+.....
+----
+
+The Benchmarks are organized into directory structure. The directories represent either groups or rules. The group directories contain `group.yml` and rule directories `rule.yml`.
+The name of the group directory is the group ID, without the prefix.
+Similarly, the name of the rule directory if the rule ID, without the prefix.
+
+For example, the Linux OS Benchmark is structured in this way:
+
+----
+.
+├── benchmark.yml
+├── intro
+│   ├── general-principles
+│   ├── group.yml
+│   └── how-to-use
+├── services
+│   ├── apt
+│   ├── avahi
+│   ├── cron_and_at
+│   ├── deprecated
+│   ├── dhcp
+│   ├── dns
+│   ├── ftp
+│   ├── group.yml
+│   ├── http
+│   ├── imap
+│   ├── ldap
+│   ├── mail
+│   ├── nfs_and_rpc
+│   .......
+│   .......
+└── system
+    ├── accounts
+    ├── auditing
+    ├── bootloader-grub2
+    ├── bootloader-grub-legacy
+    ├── entropy
+    ├── group.yml
+    ├── logging
+......
+----
+
+
 ==== Product Structure/Layout
 
 When creating a new product, use the guidelines below for the directory layout:
@@ -436,43 +534,25 @@ For example:
 [source,bash]
 ----
 $ tree -d rhel7
-
 rhel7
-├── checks
-│   └── oval
 ├── cpe
-├── fixes
-│   ├── ansible
-│   └── bash
 ├── kickstart
 ├── overlays
 ├── profiles
 ├── templates
-│   ├── csv
-├── transforms
-└── utils
+│   └── csv
+└── transforms
 
-13 directories
+7 directories
 ----
 
 ===== Product Level Directory Descriptions
 
 |===
 |Directory |Description
-
-|`checks`
-|`[red]#Required#` Contains content such as OVAL to check whether or not a
-system is configured correctly to meet government or commercial compliance
-standards. Can contain the following directories: `oval`
-
 |`cpe`
 |`[red]#Required#` Contains the Common Platform Enumeration (CPE) product
 identifier that is provided from link:https://nvd.nist.gov/products/cpe[NIST].
-
-|`fixes`
-|`[red]#Required#` Contains scripts in various languages that fixes
-configuration to meet government or commercial compliance standards. Can contain
-the following directories: `bash` `ansible` `puppet` `anaconda`
 
 |`kickstart`
 |`[red]#Optional#` Contains product kickstart or build files to be used in
@@ -489,19 +569,10 @@ government or commercial compliance standards.
 |`templates`
 |`[red]#Required#` Can contain the following directories: `csv`
 
-|`tests`
-|`[red]#Optional#` Can contain local tests to the product. The top-level
-`tests` directory is preferred over using this directory.
-
 |`transforms`
 |`[red]#Required#` Contains XSLT files and scripts that are used to
 transform the content into the expected compliance document such as XCCDF, OVAL,
 Datastream, etc.
-
-|`xccdf`
-|`[red]#Optional#` If the correct content does not exist in
-`shared/xccdf`, use this directory to create the human-readable compliance
-guide.
 |===
 
 [IMPORTANT]
@@ -529,8 +600,8 @@ always be generated using `create-stig-overlay.py`.**
 
 To create `stig_overlay.xml`, there are two things that are required: an
 official non-draft STIG release from DISA containing a XCCDF file
-(e.g. `U_Red_Hat_Enterprise_Linux_7_STIG_V1R1_Manual-xccdf.xml` and a SSG
-generated XCCDF file (e.g. `ssg-rhel7-xccdf.xml`)
+(e.g. `U_Red_Hat_Enterprise_Linux_7_STIG_V1R1_Manual-xccdf.xml` and an XCCDF file built
+by the project (e.g. `ssg-rhel7-xccdf.xml`)
 
 Example using `create-stig-overlay.py`:
 ----
@@ -582,9 +653,9 @@ $ export PATH=$PATH:/home/_username_/scap-security-guide/utils/
 ----
 
 
-=== Profile Statistics
+=== Profile Statistics and Utilities
 
-The `profile_stats.py` tool displays XCCDF profile statistics. It can show number of rules in the
+The `profile_tool.py` tool displays XCCDF profile statistics. It can show number of rules in the
 profile, how many of these rules have an OVAL check implemented, how many have a remediation available,
 shows rule IDs which are missing them and other useful information.
 
@@ -594,44 +665,23 @@ For example, to check which rules in RHEL8 OSPP profile are missing remediations
 
 ----
 $ ./build_product rhel8
-$ ./build-scripts/profile_stats.py --missing-fixes --profile ospp --benchmark build/ssg-rhel8-xccdf.xml
+$ ./build-scripts/profile_tool.py stats --missing-fixes --profile ospp --benchmark build/ssg-rhel8-xccdf.xml
 ----
+Note: There is an automated job which provides latest statistics from all products and all profiles, you can view it here: link:https://jenkins.complianceascode.io/job/scap-security-guide-stats/[Statistics]
+
+The tool also can subtract rules between YAML profiles.
+
+For example, to subtract selected rules from a given profile based on rules selected by another profile, run this command:
+----
+$ ./build-scripts/profile_tool.py sub --profile1 rhel7/profiles/ospp.profile --profile2 rhel7/profiles/pci-dss.profile
+----
+
+This will result in a new YAML profile containing exclusive rules to the profile pointed by the --profile1 option.
 
 == Contributing with XCCDFs, OVALs and remediations
 
-There are three main types of content in SSG, they are rules, defined using the XCCDF standard, checks, usually written in link:https://oval.mitre.org/language/about/[OVAL] format, and remediations, that can be executed on ansible, bash, anaconda installer and puppet.
-SSG also has its own templating mechanism, allowing content writers to create models and use it to generate a number of checks and remediations.
-
-The SSG content is primarily divided by platform and it can be seen on its directory structure:
-
-
-----
-*scap-security-guide/*
-├── _build_
-├── _build-scripts_
-├── chromium
-├── debian8
-├── _docs_
-├── fedora
-├── firefox
-├── jboss_eap6
-├── jboss_fuse6
-├── jre
-├── opensuse
-├── rhel6
-├── rhel7
-├── rhosp7
-├── shared
-├── sle11
-├── sle12
-├── ubuntu14
-├── ubuntu16
-├── _utils_
-├── wrlinux
-----
-
-Except for _build_ and _docs_, each directory contains checks and remediations that are useful and make sense to be used on that platform.
-The shared directory contains checks and remediations that can be used by more than one platform.
+There are three main types of content in the project, they are rules, defined using the XCCDF standard, checks, usually written in link:https://oval.mitre.org/language/about/[OVAL] format, and remediations, that can be executed on ansible, bash, anaconda installer and puppet.
+ComplianceAsCode also has its own templating mechanism, allowing content writers to create models and use it to generate a number of checks and remediations.
 
 === Contributing
 
@@ -661,9 +711,28 @@ A rule YAML file has one implied attribute:
 
 A rule itself contains these attributes:
 
-* `severity`: Can be `unknown`, `low`, `medium`, or `high`.
+* `severity`: Is used for metrics and tracking. It can have one of the following values: `unknown`, `info`, `low`, `medium`, or `high`.
++
+[cols="2", options="header"]
+|===
+|Level | Description
+|`unknown`
+|Severity not defined (default)
 
-A rule must contain these attributes:
+|`info`
+|Rule is informational only. Failing the rule doesn't imply failure to conform to the security guidance of the benchmark.
+
+|`low`
+|Not a serious problem
+
+|`medium`
+|Fairly serious problem
+
+|`high`
+|Grave or critical problem
+|===
++
+The severity of the rule can be overridden by a profile with `refine-rule` selector.
 
 * `title`: Human-readable title of the rule.
 * `rationale`: Human-readable HTML description of the reason why the rule exists and why it is important from the technical point of view. For example, rationale of the `partition_for_tmp` rule states that:
@@ -672,13 +741,14 @@ The <tt>/tmp</tt> partition is used as temporary storage by many programs. Placi
 * `description`: Human-readable HTML description, which provides broader context for non-experts than the rationale. For example, description of the `partition_for_tmp` rule states that:
 +
 The <tt>/var/tmp</tt> directory is a world-writable directory used for temporary file storage. Ensure it has its own partition or logical volume at installation time, or migrate it using LVM.
+* `platform`: Defines applicability of a rule. For example, if a rule is not applicable to containers, this should be set to `machine`, which means it will be evaluated only if the targeted scan environment is either bare-metal or virtual machine. Also, it can restrict applicability on higher software layers. By setting to `shadow-utils`, the rule will have its applicability restricted to only environments which have `shadow-utils` package installed. The available options can be found in the file <product>/cpe/<product>-cpe-dictionary.xml (e.g.: rhel8/cpe/rhel8-cpe-dictionary.xml). In order to support a new value, an OVAL check (of `inventory` class) must be created under `shared/checks/oval/` and referenced in the dictionary file.
 * `ocil`: Defines asserting statements to check whether or not the rule is valid.
-* `ocil_clause` attribute contains the statement which describes how to determine whether the statement is true or false. Check out `encrypt_partitions.rule` in `linux_os/guide/system/software/disk_partitioning/`: this contains a `partitions do not have a type of crypto_LUKS` value for `ocil_clause`. This clause is prefixed with the phrase "It is the case that".
+* `ocil_clause`: This attribute contains the statement which describes how to determine whether the statement is true or false. Check out `encrypt_partitions.rule` in `linux_os/guide/system/software/disk_partitioning/`: this contains a `partitions do not have a type of crypto_LUKS` value for `ocil_clause`. This clause is prefixed with the phrase "It is the case that".
 
 A rule may contain those reference-type attributes:
 
-* `identifiers`: This is related to products/CCEs that the rule applies to; this is a dictionary, whose keys should be `cce` and a value. If `cce` is modified with a product (e.g., `cce@rhel6`), it restricts what products that identifiers applies to.
-* `references`: This is related to the compliance document line items that the rule applies to. These can be attributes such as `stig`, `srg`, `nist`, etc., whose keys may be modified with a product (e.g., `stigid@rhel6`) to restrict what products an identifiers applies to.
+* `identifiers`: This is related to products/CCEs that the rule applies to; this is a dictionary, whose keys should be `cce` and a value. If `cce` is modified with a product (e.g., `cce@rhel6`), it restricts which products those identifiers applies to.
+* `references`: This is related to the compliance document line items that the rule applies to. These can be attributes such as `stig`, `srg`, `nist`, etc., whose keys may be modified with a product (e.g., `stig@rhel6`) to restrict what products an identifiers applies to.
 +
 When the rule is related to RHEL, it should have a CCE.
 Available CCEs that can be assigned to new rules are listed in the `shared/references/cce-rhel-avail.txt` file.
@@ -856,7 +926,7 @@ This utility requires an up to date JSON tree created by `rule_dir_json.py`.
 ==== Checks
 
 Checks are used to evaluate a Rule. They are written using a custom OVAL syntax and are stored as xml files inside the _checks/oval_ directory for the desired platform.
-During the building process, SSG will transform the checks in OVAL compliant checks.
+During the building process, the system will transform the checks in OVAL compliant checks.
 
 In order to create a new check, you must create a file in the appropriate directory, and name it the same as the Rule _id_. This _id_ will also be used as the OVAL _id_ attribute.
 The content of the file should follow the OVAL specification with these exceptions:
@@ -900,6 +970,40 @@ This is an example of a check, written using the custom OVAL syntax, that checks
   </unix:file_object>
 ----
 
+===== Macros
+
+Jinja macros for OVAL checks are located in link:{rootdir}/shared/macros-oval.jinja[macros-oval.jinja]. These currently include the following high-level macros:
+
+- `oval_sshd_config` -- check a parameter and value in the sshd configuration file
+- `oval_grub_config` -- check a parameter and value in the grub configuration file
+- `oval_check_config_file` -- check a parameter and value in a given configuration file
+- `oval_check_ini_file` -- check a parameter and value in a given section of a given configuration file in "INI" format
+
+Always consider reusing `oval_check_config_file` when creating new macros, it has some logic that will save you some time (e.g.: platform applicability).
+
+They also include several low-level macros which are used to build the high level macros:
+
+- set of low-level macros to build the OVAL checks for line in file:
+```
+oval_line_in_file_criterion
+oval_line_in_file_test
+oval_line_in_file_object
+oval_line_in_file_state
+```
+
+- set of low-level macros to build the OVAL checks to test if a file exists:
+```
+oval_config_file_exists_criterion
+oval_config_file_exists_test
+oval_config_file_exists_object
+```
+
+====== Platform applicability
+Platform applicability is given by the `prodtype` property in the rule.yml file. If you are using `oval_check_config_file` macro directly or indirectly, it should be enough to define `prodtype`. Default is `all` platforms. If you intend to define your own OVAL check please consider using `oval_affected` macro from link:{rootdir}/shared/macros.jinja[macros.jinja].
+
+Whenever possible, please reuse the macros and form high-level simplifications.
+This ensures consistent, high quality OVAL checks that we can edit in one place and reuse in many places. For more details on which parameters are accepted by the macros, please refer to the inline documentation in the link:{rootdir}/shared/macros-oval.jinja[macros-oval.jinja] file.
+
 === Remediations
 
 Remediations, also called fixes, are used to change the state of the machine, so that previously non-passing rules can pass. There can be multiple versions of the same remediation meant to be executed by different applications, more specifically Ansible, Bash, Anaconda and Puppet.
@@ -919,8 +1023,8 @@ Remediations also carry metadata that should be present at the beginning of the 
 | Field | Description | Accepted values
 
 | platform
-| CPE name, CPE applicability language expression or even SSG wildcards declaring which platforms the fix can be applied
-| link:https://github.com/OpenSCAP/openscap/blob/maint-1.2/cpe/openscap-cpe-dict.xml[Default CPE dictionary is packaged along with openscap]. Custom CPE dictionaries can be used. SSG wildcards are multi_platform_[all, oval, fedora, debian, ubuntu, linux, rhel, openstack, opensuse, rhev, sle].
+| CPE name, CPE applicability language expression or even wildcards declaring which platforms the fix can be applied
+| link:https://github.com/OpenSCAP/openscap/blob/maint-1.2/cpe/openscap-cpe-dict.xml[Default CPE dictionary is packaged along with openscap]. Custom CPE dictionaries can be used. Wildcards are multi_platform_[all, oval, fedora, debian, ubuntu, linux, rhel, openstack, opensuse, rhev, sle].
 
 | reboot
 | Whether or not a reboot is necessary after the fix
@@ -946,16 +1050,21 @@ Remediations also carry metadata that should be present at the beginning of the 
 IMPORTANT: The minimum version of Ansible must be at the latest supported version. See https://access.redhat.com/support/policy/updates/ansible-engine for information on the supported Ansible versions.
 
 Ansible remediations are either:
-- stored as `.yml` files in directory `ansible` in the rule directory
-- generated from templates
+
+- Stored as `.yml` files in directory `ansible` in the rule directory.
+- Generated from templates.
+- Generated using jinja2 macros.
 
 They are meant to be executed by Ansible itself when requested by openscap, so they are
 written using link:http://docs.ansible.com/ansible/latest/intro.html[Ansible's own language] with the following exceptions:
 
-- The remediation content must be only the _tasks_ section of what would be a playbook
-- Notifications and handlers are not supported
+* The remediation content must be only the _tasks_ section of what would be a playbook.
+    ** Tasks can include blocks for grouping related tasks.
+    ** The `when` clause will get augmented in certain scenarios.
+* Notifications and handlers are not supported.
+* Tags are not necessary, because they are automatically generated during build of content.
 
-Here is an example of a Ansible remediation that ensures the SELinux is enabled in grub:
+Here is an example of an Ansible remediation that ensures the SELinux is enabled in grub:
 
 ----
 # platform = multi_platform_rhel,multi_platform_fedora
@@ -974,8 +1083,33 @@ The Ansible remediation will get included by our build system to the SCAP datast
 The build system generates an Ansible Playbook from the remediation for all profiles.
 The generated Playbook is located in `/build/<product>/playbooks/<profile_id>/<rule_id>.yml`.
 
+For each rule in the given product we also generate an Ansible Playbook regardless presence of the rule in any profile.
+The generated Playbook is located in `/build/<product>/playbooks/all/<rule_id>.yml`.
+The `/build/<product>/playbooks/all/` directory represents the virtual `(all)` profile which consists of all rules in the product.
+Due to undefined XCCDF Value selectors in this pseudo-profile, these Playbooks use defaults of XCCDF Values when applicable.
+
 We also build profile Playbook that contains tasks for all rules in the profile.
-The Playbook is generated in `/build/roles/ssg-<product>-role-<profile_id>.yml`.
+The Playbook is generated in `/build/ansible/<product>-playbook-<profile_id>.yml`.
+
+Jinja macros for Ansible content are located in `/shared/macros-ansible.jinja`. These currently include the following high-level macros:
+
+- `ansible_sshd_set` -- set a parameter in the sshd configuration
+- `ansible_etc_profile_set` -- ensure a command gets executed or a variable gets set in /etc/profile or /etc/profile.d
+- `ansible_tmux_set` -- set a command in tmux configuration
+
+They also include several low-level macros:
+
+- `ansible_lineinfile` -- ensure a line is in a given file
+- `ansible_stat` -- check the status of a path on the file system
+- `ansible_find` -- find all files with matched content
+- `ansible_only_lineinfile` -- ensure that no lines matching the regex are present and add the given line
+- `ansible_set_config_file` -- for configuration files; set the given configuration value and ensure no conflicting values
+- `ansible_set_config_file_dir` -- for configuration files and files in configuration directories; set the given configuration value and ensure no conflicting values
+
+When `msg` is absent from any of the above macros, rule title will be substituted instead.
+
+Whenever possible, please reuse the macros and form high-level simplifications.
+This ensures consistent, high quality remediations that we can edit in one place and reuse in many places.
 
 ==== Bash
 
@@ -1009,7 +1143,8 @@ When writing new bash remediations content, please follow the following guidelin
 
 ==== Templating
 
-Often, a set of very related checks and/or remediations needs to be created. Instead of creating them individually, you can use the templating mechanism provided by the SSG. It supports OVAL checks and Ansible, Bash, Anaconda and Puppet remediations.
+Often, a set of very related checks and/or remediations needs to be created. Instead of creating them individually, you can use the templating mechanism provided by the ComplianceAsCode project.
+It supports OVAL checks and Ansible, Bash, Anaconda and Puppet remediations.
 In order to use this mechanism, you have to:
 
 1) Create the template files, one for each type of file. Each one should be named `template_<TYPE>_<NAME>.jinja`. Where `<TYPE>` should be OVAL, ANSIBLE, BASH, ANACONDA or PUPPET and `<NAME>` is the what we will call hereafter the template name.
@@ -1049,7 +1184,7 @@ This is the file with the generator class for the installed package template, it
 include::{templatesdir}/create_package_installed.py
 ----
 
-4) Finally, you have to ensure the SSG knows your template. To do that, you have to edit the file _ssg/build_templates.py_ and include the generator class you've just created and declare which csv file to use along with it.
+4) Finally, you have to ensure the build system knows your template. To do that, you have to edit the file _ssg/build_templates.py_ and include the generator class you've just created and declare which csv file to use along with it.
 
 This is an example of a patch to add a new template into the templating system:
 
@@ -1074,7 +1209,7 @@ This is an example of a patch to add a new template into the templating system:
 
 === Tests (ctest)
 
-SCAP Security Guide uses ctest to orchestrate testing upstream. To run the test suite go to the build folder and execute `ctest`:
+ComplianceAsCode uses ctest to orchestrate testing upstream. To run the test suite go to the build folder and execute `ctest`:
 
 ----
 cd build/
@@ -1089,7 +1224,7 @@ See some of the existing testing code in `cmake/SSGCommon.cmake`.
 
 === Contribution to infrastructure code
 
-The SSG build and templating system is mostly written in Python.
+The ComplianceAsCode build and templating system is mostly written in Python.
 
 ==== Python
 
@@ -1108,8 +1243,7 @@ describes the goal of the project.
 This git repository was created by simply renaming and moving the SCAP Security Guide (SSG)
 repository to a different GitHub organization.
 
-Due to this history, the repository contains many mentions of SCAP Security Guide.
-These legacy mentions are continuously cleaned up as the project develops.
+Due to this history, the repository contains mentions of SCAP Security Guide or `ssg`.
 Some of them are kept due to backwards compatibility.
 
 For example, the output files produced by our build system still start by `ssg-` prefix.

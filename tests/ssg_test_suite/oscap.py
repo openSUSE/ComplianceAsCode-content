@@ -93,16 +93,6 @@ def find_result_id_in_output(output):
     return match.group(0).split()[-1]
 
 
-def ansible_playbook_set_hosts(playbook):
-    """Updates ansible playbok to apply to all hosts."""
-    with open(playbook, 'r') as f:
-        lines = f.readlines()
-    lines.insert(1, ' - hosts: all\n')
-    with open(playbook, 'w') as f:
-        for line in lines:
-            f.write(line)
-
-
 def get_result_id_from_arf(arf_path, verbose_path):
     command = ['oscap', 'info', arf_path]
     command_string = ' '.join(command)
@@ -149,7 +139,6 @@ def run_stage_remediation_ansible(run_type, formatting, verbose_path):
                            formatting['domain_ip'],
                            '/' + formatting['output_file']):
         return False
-    ansible_playbook_set_hosts(formatting['playbook'])
     command = (
         'ansible-playbook',  '-i', '{0},'.format(formatting['domain_ip']),
         '-u' 'root', formatting['playbook'])
@@ -299,7 +288,7 @@ class GenericRunner(object):
         self._make_results_path()
 
         self.command_base = []
-        self.command_options = []
+        self.command_options = ['--verbose', 'DEVEL']
         self.command_operands = []
 
         result = None
@@ -339,10 +328,7 @@ class GenericRunner(object):
         raise NotImplementedError()
 
     def initial(self):
-        self.command_options = [
-                '--verbose', 'DEVEL',
-                '--results', self.results_path
-        ] + self.command_options
+        self.command_options += ['--results', self.results_path]
         result = self.make_oscap_call()
         return result
 

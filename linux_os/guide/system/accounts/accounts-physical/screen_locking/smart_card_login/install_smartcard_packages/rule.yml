@@ -10,7 +10,7 @@ description: |-
     {{% if product == "sle12" %}}
     {{{ describe_package_install(package="pam_pkcs11 mozilla-nss mozilla-nss-tools pcsc-ccid pcsc-lite pcsc-tools opensc coolkey") }}}
     {{% else %}}
-    {{{ describe_package_install(package="esc pam_pkcs11 authconfig-gtk") }}}
+    {{{ describe_package_install(package="esc pam_pkcs11") }}}
     {{% endif %}}
 
 rationale: |-
@@ -47,7 +47,5 @@ ocil: |-
     {{% if product == "sle12" %}}
     <pre># rpm -q pam_pkcs11 mozilla-nss mozilla-nss-tools pcsc-ccid pcsc-lite pcsc-tools opensc coolkey</pre>
     {{% else %}}
-    <pre>$ sudo yum list installed esc pam_pkcs11 authconfig-gtk</pre>
+    <pre>$ sudo yum list installed esc pam_pkcs11</pre>
     {{% endif %}}
-
-platform: machine

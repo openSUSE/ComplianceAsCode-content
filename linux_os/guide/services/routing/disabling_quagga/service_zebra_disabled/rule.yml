@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8,ol7,ol8
+prodtype: rhel7,rhel8,ol7,ol8,rhv4
 
 title: 'Disable Quagga Service'
 
@@ -30,3 +30,5 @@ references:
     cis-csc: 12,15,8
 
 ocil: '{{{ ocil_service_disabled(service="zebra") }}}'
+
+platform: machine

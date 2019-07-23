@@ -3,6 +3,7 @@
     <metadata>
       <title>Require Authentication for Single-User Mode</title>
       <affected family="unix">
+        <platform>multi_platform_wrlinux</platform>
         <platform>multi_platform_rhel</platform>
         <platform>multi_platform_fedora</platform>
         <platform>multi_platform_rhv</platform>
@@ -29,7 +30,7 @@
   {{%- if init_system == "systemd" -%}}
   <ind:textfilecontent54_test check="all" check_existence="all_exist"
     comment="Tests that
-    {{% if product == "fedora" -%}}
+    {{% if product in ["fedora", "rhel8"] -%}}
     /usr/lib/systemd/systemd-sulogin-shell
     {{%- else -%}}
     /sbin/sulogin
@@ -41,7 +42,7 @@
   </ind:textfilecontent54_test>
   <ind:textfilecontent54_object id="obj_require_rescue_service" version="1">
     <ind:filepath>/usr/lib/systemd/system/rescue.service</ind:filepath>
-    {{%- if product == "fedora" -%}}
+    {{%- if product in ["fedora", "rhel8"] -%}}
     <ind:pattern operation="pattern match">^ExecStart=\-.*/usr/lib/systemd/systemd-sulogin-shell[ ]+rescue</ind:pattern>
     {{%- else -%}}
     <ind:pattern operation="pattern match">^ExecStart=\-.*/sbin/sulogin</ind:pattern>

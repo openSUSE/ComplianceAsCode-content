@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8,fedora,ol7,ol8
+prodtype: wrlinux1019,rhel7,rhel8,fedora,ol7,ol8,rhv4
 
 title: 'Ensure PAM Enforces Password Requirements - Minimum Different Categories'
 
@@ -37,7 +37,8 @@ rationale: |-
 severity: medium
 
 identifiers:
-    cce@rhel7: 27115-5
+    cce@rhel7: 82045-6
+    cce@rhel8: 82046-4
 
 references:
     disa: "195"

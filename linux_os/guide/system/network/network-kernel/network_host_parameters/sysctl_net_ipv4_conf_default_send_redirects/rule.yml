@@ -1,8 +1,8 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
-title: 'Disable Kernel Parameter for Sending ICMP Redirects by Default'
+title: 'Disable Kernel Parameter for Sending ICMP Redirects on all IPv4 Interfaces by Default'
 
 description: '{{{ describe_sysctl_option_value(sysctl="net.ipv4.conf.default.send_redirects", value="0") }}}'
 
@@ -17,10 +17,11 @@ severity: medium
 
 identifiers:
     cce@rhel6: 27001-7
-    cce@rhel7: 80156-3
+    cce@rhel7: 80999-6
     cce@rhel8: 80921-0
 
 references:
+    anssi: NT28(R22)
     stigid@rhel6: RHEL-06-000080
     srg@rhel6: SRG-OS-999999
     disa@rhel6: '1551'

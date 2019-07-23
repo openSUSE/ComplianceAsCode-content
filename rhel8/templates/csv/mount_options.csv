@@ -14,4 +14,18 @@
 /tmp,nodev
 /tmp,noexec
 /tmp,nosuid
+/home,nosuid
+/home,nodev
+/var,nodev
+/var/tmp,nodev
+/var/tmp,noexec
+/var/tmp,nosuid
+/var/log,nodev
+/var/log,noexec
+/var/log,nosuid
+/var/log/audit,nodev
+/var/log/audit,noexec
+/var/log/audit,nosuid
+/boot,nodev
+/boot,nosuid
 

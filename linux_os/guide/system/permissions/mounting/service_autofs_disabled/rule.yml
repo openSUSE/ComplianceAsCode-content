@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
 title: 'Disable the Automounter'
 
@@ -48,3 +48,5 @@ references:
     cis-csc: 1,12,15,16,5
 
 ocil: '{{{ ocil_service_disabled(service="autofs") }}}'
+
+platform: machine

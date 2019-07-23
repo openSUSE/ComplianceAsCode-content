@@ -1,4 +1,4 @@
-= SCAP Security Guide User Guide
+= ComplianceAsCode User Guide
 :imagesdir: ./images
 :toc:
 :toc-placement: preamble
@@ -8,7 +8,7 @@ toc::[]
 
 == Introduction
 
-The SCAP Security Guide (SSG) project delivers security guidance, baselines and
+The ComplianceAsCode (SSG) project delivers security guidance, baselines and
 associated validation mechanisms utilizing the Security Content Automation
 Protocol (SCAP). SSG provides content for Red Hat Enterprise Linux and JBoss
 Enterprise Application Server (JBoss EAP).
@@ -35,17 +35,18 @@ information that could reasonably be expected to cause damage to U.S. National
 Security. As part of this mission, NSA develops and distributes configuration
 guidance for operating systems. These guides are currently being used
 throughout the U.S. government and by numerous entities as a security baseline
-for their systems. The SCAP Security Guide project serves as NSA's upstream
+for their systems. The ComplianceAsCode project serves as NSA's upstream
 source for https://www.nsa.gov/ia/mitigation_guidance/security_configuration_guides/operating_systems.shtml#linux2[Red Hat Enterprise Linux operating system guidance].
 
 image::logos-400x400-disa-300x300.jpg[align="left"]
 
 The http://www.disa.mil/About/Our-Organization-Structure/OD-Field-Office/Field-Security-Operations[U.S. Defense Information Systems Agency, Field Security Operations]
 (DISA FSO) authors hardening guidance known as Security Technical
-Implementation Guides (http://iase.disa.mil/stigs/index.html[STIGs]). These
+Implementation Guides (https://public.cyber.mil/stigs/[STIGs]). These
 documents, used throughout the U.S. military to harden systems, establish
-formal security compliance baselines. The SCAP Security Guide project serves as
-the usptream development source for http://iase.disa.mil/stigs/os/unix-linux/Pages/red-hat.aspx[Red Hat STIG content]
+formal security compliance baselines. The ComplianceAsCode project serves as
+the usptream development source for
+https://public.cyber.mil/stigs/downloads/?_dl_facet_stigs=operating-systems%2Cunix-linux[Red Hat STIG content]
 and helps DISA FSO move towards their business objective of utilizing
 SCAP-based formats to automate security compliance across U.S. military
 organizations.
@@ -61,7 +62,7 @@ configuration of operating systems and applications. NCP is migrating its
 repository of checklists to conform to the Security Content Automation Protocol
 (SCAP).”
 
-The SCAP Security Guide project serves as the upstream repository for
+The ComplianceAsCode project serves as the upstream repository for
 https://nvd.nist.gov/ncp/checklist/811[Red Hat Enterprise Linux related checklists].
 
 == Installing
@@ -86,30 +87,26 @@ $ sudo dnf -y install scap-security-guide
 ------------
 
 
-=== Building
+=== Installing content from upstream
 
-If you need to build the upstream content rather than getting it from the distribution, you can build it yourself.
-Either of the steps below will conclude with datastreams and other content built in the `build` directory.
+If you need to use upstream content rather than what is shipped in the distribution, you can download the nightly build, or build it yourself.
 
-* Use the `build_product` script to build a single product of your choice:
-+
-------------
-$ ./build_product fedora
-$ cd build
-------------
+The nightly builds are performed by our link:https://jenkins.complianceascode.io/view/Maintenance%20Jobs/[Jenkins instance], in the nightly jobs. Below are direct links to the latest builds:
 
-* Manual build process:
-+
-------------
-$ cd build
-$ cmake ..
-$ make fedora
-------------
+* link:https://jenkins.complianceascode.io/view/SCAP%20Security%20Guide/job/scap-security-guide-nightly-zip/lastSuccessfulBuild/artifact/scap-security-guide-nightly.zip[nightly build with OVAL 5.11]
+* link:https://jenkins.complianceascode.io/view/SCAP%20Security%20Guide/job/scap-security-guide-nightly-oval510-zip/lastSuccessfulBuild/artifact/scap-security-guide-nightly-oval-510.zip[nightly build with OVAL 5.10]
+
+If you wish to build the content yourself, please, refer to link:https://github.com/ComplianceAsCode/content/blob/master/docs/manual/developer_guide.adoc#3-building-scap-security-guide[Building SCAP Security Guide] section, in the link:https://github.com/ComplianceAsCode/content/blob/master/docs/manual/developer_guide.adoc[Developer Guide].
+
 
 == Running a Scan
 
 === Command Line Interface (CLI)
-This document outlines the usage of OpenSCAP, a command-line utility packaged within Fedora and Red Hat Enterprise Linux which allows users to load, scan, validate, edit, and export SCAP documents. Additional details regarding OpenSCAP can be found on the project homepage located at http://open-scap.org/.
+This document outlines the usage of OpenSCAP, a command-line utility packaged within Fedora and Red Hat Enterprise Linux which allows users to load, scan, validate, edit, and export SCAP documents.
+
+See also https://static.open-scap.org/openscap-1.3/oscap_user_manual.html[OpenSCAP User Manual] for instructions how to use OpenSCAP.
+Additional details regarding OpenSCAP can be found on the project homepage located at http://open-scap.org/.
+
 Five arguments to OpenSCAP are needed to perform a system scan against the upstream DISA STIG profile:
 
     * --profile +
@@ -121,20 +118,16 @@ Five arguments to OpenSCAP are needed to perform a system scan against the upstr
     * --report +
     Optional, indicates location to place HTML formatted results
 
-    * --cpe +
-    Mandatory, identifies location of CPE dictionary
-
-    * xccdf location +
-    Mandatory, identifies location of XCCDF file
+    * datastream location +
+    Mandatory, identifies location of SCAP Source Datastream file
 
 Putting these arguments together, a properly formatted command would be:
 
 ----
-$ sudo oscap xccdf eval --profile stig-rhel6-server \
---results /root/ssg-results.xml \
---report /root/ssg-report.xml \
---cpe /usr/share/scap/ssg/ssg-rhel6-cpe-dictionary.xml \
-/usr/share/scap/ssg/ssg-rhel6-xccdf.xml
+$ sudo oscap xccdf eval --profile stig \
+--results /tmp/results.xml \
+--report /tmp/report.html \
+/usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml
 ----
 
 While the scan is running, you will see output similar to the following on your screen:
@@ -161,13 +154,15 @@ Ident   CCE-27223-7
 Result  pass
 ----
 
-=== Result Interpretation
+=== Results Interpretation
 
-HTML Results
-    asdasdasd
-    asdasd
-XML Results
-    Looking at the results.xml file, you will notice lines similar to those below:
+==== HTML Results
+
+Just open the `/tmp/report.html` file in your favorite browser.
+
+==== XML Results
+
+Looking at the `/tmp/results.xml` file, you will notice lines similar to those below:
 
 ----
     <rule-result idref="ensure_gpgcheck_globally_activated" time="2013-10-22T10:03:43" severity="high" weight="1.000000">
@@ -205,7 +200,12 @@ XML Results
 === Remediation
 
 ==== Bash Scripts
-SCAP Security Guide embeds bash remediation scripts into the SCAP content. This allows for SCAP compatible tools to extract these remediation scripts to aide in potential remediation of system misconfigurations.
+
+A Bash remediation script for each profile is shipped in `scap-security-guide` package.
+The scripts can be found in `/usr/share/scap-security-guide/bash/` or if you build the project from source in `./build/bash`.
+
+Moreover, ComplianceAsCode embeds bash remediation scripts into the SCAP content. This allows for SCAP compatible tools to extract these remediation scripts to aide in potential remediation of system misconfigurations.
+
 OpenSCAP, the CLI delivered with Fedora and Red Hat Enterprise Linux systems, contains the ability to transform XML results into an executable script. The syntax to generate a remediation script is:
 
 ----
@@ -269,16 +269,28 @@ This output could be redirected to a bash script, or built into your RHEL6 provi
 
 #### Ansible Playbooks
 
-SCAP Security Guide embeds ansible remediation scripts into the SCAP content. This allows for SCAP compatible tools to extract these remediation scripts to aide in potential remediation of system misconfigurations. When using OpenSCAP with
-Ansible, it is advisable to use the playbooks from https://github.com/RedHatOfficial. These playbooks are generated from the SCAP Security Guide project and are also available on Ansible Galaxy.
+ComplianceAsCode embeds ansible remediation scripts into the SCAP content. This allows for SCAP compatible tools to extract these remediation scripts to aide in potential remediation of system misconfigurations. When using OpenSCAP with
+Ansible, it is advisable to use the playbooks from https://github.com/RedHatOfficial. These playbooks are generated from the ComplianceAsCode project and are also available on Ansible Galaxy.
 
 IMPORTANT: The minimum version of Ansible must be at the latest supported version. See https://access.redhat.com/support/policy/updates/ansible-engine for information on the supported Ansible versions.
 
 ## Deprecated Content
 
-.Deprecated Content
+.Deprecated or Removed Content
 |===
 |Product |EOL Date |Last Release
+
+|Red Hat OpenStack Platform 7
+|August 5, 2018
+| link:https://github.com/ComplianceAsCode/content/releases/tag/v0.1.41[content 0.1.41]
+
+|Webmin
+|-
+| link:https://github.com/OpenSCAP/scap-security-guide/releases/tag/v0.1.38[SSG 0.1.38]
+
+|Red Hat Enterprise Virtualization Manager 3
+|September 30, 2018
+| link:https://github.com/OpenSCAP/scap-security-guide/releases/tag/v0.1.38[SSG 0.1.38]
 
 |JBoss EAP 5
 |November 30, 2016
@@ -301,7 +313,7 @@ employee or contractor; it is not available to the general public.
 The SPAWAR SCC website is http://www.public.navy.mil/spawar/Atlantic/ProductsServices/Pages/SCAP.aspx.
 
 
-To utilize SCC with SCAP Security Guide content:
+To utilize SCC with ComplianceAsCode content:
 
 1. Import SSG content into SCC through the cscc -is command
 +

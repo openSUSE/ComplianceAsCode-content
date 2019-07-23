@@ -1,8 +1,8 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,sle12
+prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
-title: 'Configure Kernel Parameter to Use TCP Syncookies'
+title: 'Enable Kernel Parameter to Use TCP Syncookies on IPv4 Interfaces'
 
 description: '{{{ describe_sysctl_option_value(sysctl="net.ipv4.tcp_syncookies", value="1") }}}'
 
@@ -22,6 +22,7 @@ identifiers:
     cce@rhel8: 80923-6
 
 references:
+    anssi: NT28(R22)
     stigid@rhel6: RHEL-06-000095
     srg@rhel6: SRG-OS-000142
     disa@rhel6: 1092,1095

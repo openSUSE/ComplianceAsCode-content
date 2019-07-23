@@ -15,7 +15,12 @@ rationale: |
 severity: medium
 
 identifiers:
+    cce@rhel6: 81057-2
+    cce@rhel7: 81058-0
     cce@rhel8: 80953-3
+
+references:
+    anssi: NT28(R25)
 
 {{{ complete_ocil_entry_sysctl_option_value(sysctl="kernel.yama.ptrace_scope", value="1") }}}
 

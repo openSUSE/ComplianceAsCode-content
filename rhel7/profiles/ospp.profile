@@ -390,8 +390,6 @@ selections:
     - package_pcsc-lite_installed
     - service_pcscd_enabled
     - sssd_enable_smartcards
-    - sssd_memcache_timeout
-    - sssd_offline_cred_expiration
     - sssd_ssh_known_hosts_timeout
     - encrypt_partitions
     - ensure_redhat_gpgkey_installed
@@ -401,7 +399,7 @@ selections:
     - network_sniffer_disabled
     - network_ipv6_disable_rpc
     - network_ipv6_privacy_extensions
-    - dconf_use_text_backend
+    - dconf_db_up_to_date
     - dconf_gnome_banner_enabled
     - dconf_gnome_disable_automount
     - dconf_gnome_disable_ctrlaltdel_reboot

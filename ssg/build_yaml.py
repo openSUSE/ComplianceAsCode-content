@@ -11,9 +11,10 @@ import yaml
 from .constants import XCCDF_PLATFORM_TO_CPE
 from .constants import PRODUCT_TO_CPE_MAPPING
 from .rules import get_rule_dir_id, get_rule_dir_yaml, is_rule_dir
+from .rule_yaml import parse_prodtype
 
 from .checks import is_cce_format_valid, is_cce_value_valid
-from .yaml import open_and_expand, open_and_macro_expand
+from .yaml import DocumentationNotComplete, open_and_expand, open_and_macro_expand
 from .utils import required_key, mkdir_p
 
 from .xml import ElementTree as ET
@@ -104,6 +105,25 @@ class Profile(object):
 
         return profile
 
+    def dump_yaml(self, file_name, documentation_complete=True):
+        to_dump = {}
+        to_dump["documentation_complete"] = documentation_complete
+        to_dump["title"] = self.title
+        to_dump["description"] = self.description
+        if self.extends is not None:
+            to_dump["extends"] = self.extends
+
+        selections = []
+        for item in self.selected:
+            selections.append(item)
+        for item in self.unselected:
+            selections.append("!"+item)
+        for varname in self.variables.keys():
+            selections.append(varname+"="+self.variables.get(varname))
+        to_dump["selections"] = selections
+        with open(file_name, "w+") as f:
+            yaml.dump(to_dump, f, indent=4)
+
     def _parse_selections(self, entries):
         for item in entries:
             if "=" in item:
@@ -181,6 +201,40 @@ class Profile(object):
                     )
                 )
                 raise ValueError(msg)
+
+    def validate_rules(self, rules, groups):
+        existing_rule_ids = [r.id_ for r in rules]
+        rule_selectors = self.get_rule_selectors()
+        for id_ in rule_selectors:
+            if id_ in groups:
+                msg = (
+                    "You have selected a group '{group_id}' instead of a "
+                    "rule. Groups have no effect in the profile and are not "
+                    "allowed to be selected. Please remove '{group_id}' "
+                    "from profile '{profile_id}' before proceeding."
+                    .format(group_id=id_, profile_id=self.id_)
+                )
+                raise ValueError(msg)
+            if id_ not in existing_rule_ids:
+                msg = (
+                    "Rule '{rule_id}' was not found in the benchmark. Please "
+                    "remove rule '{rule_id}' from profile '{profile_id}' "
+                    "before proceeding."
+                    .format(rule_id=id_, profile_id=self.id_)
+                )
+                raise ValueError(msg)
+
+    def __sub__(self, other):
+        profile = Profile(self.id_)
+        profile.title = self.title
+        profile.description = self.description
+        profile.extends = self.extends
+        profile.selected = list(set(self.selected) - set(other.selected))
+        profile.selected.sort()
+        profile.unselected = list(set(self.unselected) - set(other.unselected))
+        profile.variables = dict ((k, v) for (k, v) in self.variables.items()
+                             if k not in other.variables or v != other.variables[k])
+        return profile
 
 
 class Value(object):
@@ -354,7 +408,10 @@ class Benchmark(object):
                 )
                 continue
 
-            new_profile = Profile.from_yaml(dir_item_path, env_yaml)
+            try:
+                new_profile = Profile.from_yaml(dir_item_path, env_yaml)
+            except DocumentationNotComplete:
+                continue
             if new_profile is None:
                 continue
 
@@ -783,10 +840,13 @@ class DirectoryLoader(object):
         self.subdirectories = []
 
         self.all_values = set()
+        self.all_rules = set()
+        self.all_groups = set()
 
         self.profiles_dir = profiles_dir
         self.bash_remediation_fns = bash_remediation_fns
         self.env_yaml = env_yaml
+        self.product = env_yaml["product"]
 
         self.parent_group = None
 
@@ -843,6 +903,7 @@ class DirectoryLoader(object):
 
         if self.group_file:
             group = Group.from_yaml(self.group_file, self.env_yaml)
+            self.all_groups.add(group.id_)
 
         return group
 
@@ -867,6 +928,8 @@ class DirectoryLoader(object):
             loader.parent_group = self.loaded_group
             loader.process_directory_tree(subdir)
             self.all_values.update(loader.all_values)
+            self.all_rules.update(loader.all_rules)
+            self.all_groups.update(loader.all_groups)
 
     def _get_new_loader(self):
         raise NotImplementedError()
@@ -897,6 +960,10 @@ class BuildLoader(DirectoryLoader):
     def _process_rules(self):
         for rule_yaml in self.rule_files:
             rule = Rule.from_yaml(rule_yaml, self.env_yaml)
+            prodtypes = parse_prodtype(rule.prodtype)
+            if "all" not in prodtypes and self.product not in prodtypes:
+                continue
+            self.all_rules.add(rule)
             self.loaded_group.add_rule(rule)
             if self.resolved_rules_dir:
                 output_for_rule = os.path.join(

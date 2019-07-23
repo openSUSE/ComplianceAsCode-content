@@ -4,12 +4,14 @@ chrony
 cronie
 dconf
 esc
+fapolicyd
 firewalld
 gdm
 libreswan
 ntp
+opensc
 openssh-server
-pam_pkcs11
 pcsc-lite
 rsyslog
+sssd
 tmux

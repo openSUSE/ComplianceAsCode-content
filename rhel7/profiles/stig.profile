@@ -6,19 +6,19 @@ description: |-
     This profile contains configuration checks that align to the
     DISA STIG for Red Hat Enterprise Linux V1R4.
 
-    In addition to being applicable to RHEL7, DISA recognizes this
+    In addition to being applicable to Red Hat Enterprise Linux 7, DISA recognizes this
     configuration baseline as applicable to the operating system tier of
-    Red Hat technologies that are based off RHEL7, such as:
+    Red Hat technologies that are based off Red Hat Enterprise Linux 7, such as:
 
     - Red Hat Enterprise Linux Server
     - Red Hat Enterprise Linux Workstation and Desktop
     - Red Hat Enterprise Linux for HPC
     - Red Hat Storage
+    - Red Hat Containers with a Red Hat Enterprise Linux 7 image
 
 selections:
     - login_banner_text=dod_banners
     - inactivity_timeout_value=15_minutes
-    - var_sssd_ssh_known_hosts_timeout=5_minutes
     - var_screensaver_lock_delay=5_seconds
     - sshd_idle_timeout_value=10_minutes
     - var_accounts_fail_delay=4
@@ -57,7 +57,7 @@ selections:
     - rpm_verify_permissions
     - rpm_verify_ownership
     - rpm_verify_hashes
-    - dconf_use_text_backend
+    - dconf_db_up_to_date
     - dconf_gnome_banner_enabled
     - dconf_gnome_login_banner_text
     - banner_etc_issue

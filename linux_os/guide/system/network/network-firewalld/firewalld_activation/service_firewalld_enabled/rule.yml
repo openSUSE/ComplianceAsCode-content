@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8,fedora,ol7,ol8
+prodtype: wrlinux1019,rhel7,rhel8,fedora,ol7,ol8,rhv4
 
 title: 'Verify firewalld Enabled'
 
@@ -14,7 +14,7 @@ rationale: |-
 severity: medium
 
 identifiers:
-    cce@rhel7: 27361-5
+    cce@rhel7: 80998-8
     cce@rhel8: 80877-4
 
 references:

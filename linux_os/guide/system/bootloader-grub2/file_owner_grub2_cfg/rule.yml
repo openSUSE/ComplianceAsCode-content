@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8,fedora,ol7,ol8
+prodtype: rhel7,rhel8,fedora,ol7,ol8,rhv4
 
 title: 'Verify /boot/grub2/grub.cfg User Ownership'
 
@@ -15,7 +15,7 @@ rationale: 'Only root should be able to modify important boot parameters.'
 severity: medium
 
 identifiers:
-    cce@rhel7: 26860-7
+    cce@rhel7: 82026-6
     cce@rhel8: 80805-5
 
 references:

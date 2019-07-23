@@ -1,10 +1,13 @@
-# platform = Red Hat Enterprise Linux 7,Oracle Linux 7,multi_platform_rhv
+# platform = multi_platform_wrlinux,Red Hat Enterprise Linux 7,Oracle Linux 7,multi_platform_rhv
 
 # include remediation functions library
 . /usr/share/scap-security-guide/remediation_functions
 
 disable_prelink
 
+if grep -q -m1 -o aes /proc/cpuinfo; then
+	package_install dracut-fips-aesni
+fi
 package_install dracut-fips
 
 dracut -f

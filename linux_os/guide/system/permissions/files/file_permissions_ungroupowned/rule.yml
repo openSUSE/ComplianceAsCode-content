@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,rhv4,sle12
 
 title: 'Ensure All Files Are Owned by a Group'
 

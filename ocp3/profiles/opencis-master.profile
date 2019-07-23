@@ -47,6 +47,7 @@ selections:
     - file_permissions_var_lib_etcd
     - scheduler_profiling_argument
     - controller_bind_address
+    - controller_disable_profiling
     - controller_rotate_kubelet_server_certs
     - controller_terminated_pod_gc_threshhold
     - controller_use_service_account
@@ -95,7 +96,6 @@ selections:
     - api_server_request_timeout
     - api_server_secure_port
     - api_server_service_account_key
-    - api_server_service_account_lookup
     - api_server_tls_cert
     - api_server_tls_cipher_suites
     - api_server_tls_private_key

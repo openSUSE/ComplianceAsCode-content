@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,fedora,ol7,ol8,sle12
+prodtype: wrlinux1019,rhel6,rhel7,rhel8,fedora,ol7,ol8,rhv4,sle12
 
 title: 'Configure Periodic Execution of AIDE'
 
@@ -37,6 +37,7 @@ identifiers:
     cce@rhel8: 80676-0
 
 references:
+    anssi: NT28(R51)
     disa@rhel6: 374,416,1069,1263,1297,1589
     srg@rhel6: SRG-OS-000202,SRG-OS-000094,SRG-OS-000098,SRG-OS-000232,SRG-OS-000196,SRG-OS-000265
     stigid@rhel6: RHEL-06-000306
@@ -64,5 +65,3 @@ ocil: |-
     <pre>05 4 * * * root /usr/sbin/aide --check</pre>
 
     NOTE: The usage of special cron times, such as @daily or @weekly, is acceptable.
-
-platform: machine

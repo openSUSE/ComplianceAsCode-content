@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel7,rhel8
+prodtype: rhel6,rhel7,rhel8
 
 title: 'Add noexec Option to /var/tmp'
 
@@ -16,7 +16,13 @@ rationale: |-
 
 severity: unknown
 
+identifiers:
+    cce@rhel6: 82149-6
+    cce@rhel7: 82150-4
+    cce@rhel8: 82151-2
+
 references:
     cis: 1.1.10
+    anssi: NT28(R12)
 
 platform: machine

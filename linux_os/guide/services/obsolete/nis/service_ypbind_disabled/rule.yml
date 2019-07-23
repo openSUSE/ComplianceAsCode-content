@@ -1,6 +1,6 @@
 documentation_complete: true
 
-prodtype: rhel6,rhel7,rhel8,ol7,ol8
+prodtype: rhel6,rhel7,rhel8,ol7,ol8,rhv4
 
 title: 'Disable ypbind Service'
 
@@ -34,3 +34,5 @@ references:
     cis-csc: 11,12,14,15,3,8,9
 
 ocil: '{{{ ocil_service_disabled(service="ypbind") }}}'
+
+platform: machine

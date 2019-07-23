@@ -1,5 +1,6 @@
 #!/bin/bash
-# profiles = xccdf_org.ssgproject.content_profile_nist-800-171-cui
+# platform = Red Hat Enterprise Linux 7
+# profiles = xccdf_org.ssgproject.content_profile_ospp
 # remediation = bash
 
 . ../../auditd_utils.sh

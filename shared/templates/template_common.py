@@ -19,6 +19,10 @@ class ActionType:
     BUILD = 3
 
 
+class CSVLineError(Exception):
+    pass
+
+
 class UnknownTargetError(ValueError):
     def __init__(self, lang):
         super(UnknownTargetError, self).__init__(
@@ -98,8 +102,8 @@ class FilesGenerator(object):
 
         try:
             jinja_dict = ssg.utils.merge_dicts(self.env_yaml, constants)
-            filled_template = ssg.jinja.process_file(template_filepath,
-                                                     jinja_dict)
+            filled_template = ssg.jinja.process_file_with_macros(template_filepath,
+                                                                 jinja_dict)
 
             with open(output_filepath, "w") as f:
                 f.write(filled_template)
@@ -143,7 +147,7 @@ class FilesGenerator(object):
 
         CSV lines can look like:
             col1, col2 # comment
-            col3, col4 # only-for: bash, oval
+            col3, col4 # except-for: bash, oval
         """
 
         with open(filename, "r") as csv_file:
@@ -163,6 +167,11 @@ class FilesGenerator(object):
                     # target is invalid.
                     if e.lang not in TEMPLATED_LANGUAGES:
                         sys.stderr.write(str(e) + "\n")
+            except CSVLineError as e:
+                sys.stderr.write("Unexpected CSV line format in "
+                                 "file {}: \"{}\"\n".format(filename, ",".join(csv_line)))
+
+
 
     @abstractmethod
     def csv_format(self):

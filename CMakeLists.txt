@@ -31,7 +31,7 @@ set(SSG_KICKSTART_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/scap-security-guide/kick
 
 set(SSG_MAJOR_VERSION 0)
 set(SSG_MINOR_VERSION 1)
-set(SSG_PATCH_VERSION 44)
+set(SSG_PATCH_VERSION 45)
 set(SSG_VERSION "${SSG_MAJOR_VERSION}.${SSG_MINOR_VERSION}.${SSG_PATCH_VERSION}")
 
 set(SSG_VENDOR "ssgproject" CACHE STRING "Specify the XCCDF 1.2 vendor string.")
@@ -48,29 +48,40 @@ option(SSG_SEPARATE_SCAP_FILES_ENABLED "If enabled, separate SCAP files (OVAL, X
 option(SSG_JINJA2_CACHE_ENABLED "If enabled, the jinja2 templating files will be cached into bytecode. Also see SSG_JINJA2_CACHE_DIR." TRUE)
 set(SSG_JINJA2_CACHE_DIR "${CMAKE_BINARY_DIR}/jinja2_cache" CACHE PATH "Where the jinja2 cached bytecode should be stored. This speeds up builds at the expense of disk space. You can use one location for multiple SSG builds for performance improvements.")
 
-option(SSG_PRODUCT_CHROMIUM "If enabled, the Chromium SCAP content will be built" TRUE)
-option(SSG_PRODUCT_DEBIAN8 "If enabled, the Debian 8 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_EAP6 "If enabled, the JBoss EAP6 SCAP content will be built" TRUE)
+# SSG_PRODUCT_DEFAULT modifies the behavior of all other options. Products
+# which should be built by default should use the value ${SSG_PRODUCT_DEFAULT}
+# instead of the boolean True. This allows us disable all default products by
+# passing `-DSSG_PRODUCT_DEFAULT=OFF` and then manually specifying a list of
+# products to build.
+option(SSG_PRODUCT_DEFAULT "If enabled, all default release products will be built; otherwise only explicitly enabled products will be" TRUE)
+
+# Products to build content for. These generally correspond to directories in
+# the root of this project. Note that the example product is always disabled
+# unless explicitly asked for.
+option(SSG_PRODUCT_CHROMIUM "If enabled, the Chromium SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_DEBIAN8 "If enabled, the Debian 8 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_EAP6 "If enabled, the JBoss EAP6 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
 option(SSG_PRODUCT_EXAMPLE "If enabled, the Example SCAP content will be built" FALSE)
-option(SSG_PRODUCT_FEDORA "If enabled, the Fedora SCAP content will be built" TRUE)
-option(SSG_PRODUCT_FIREFOX "If enabled, the Firefox SCAP content will be built" TRUE)
-option(SSG_PRODUCT_FUSE6 "If enabled, the JBoss Fuse6 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_JRE "If enabled, the JRE SCAP content will be built" TRUE)
-option(SSG_PRODUCT_OCP3 "If enabled, the OCP3 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_OL7 "If enabled, the Oracle Linux 7 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_OL8 "If enabled, the Oracle Linux 8 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_OPENSUSE "If enabled, the openSUSE SCAP content will be built" TRUE)
-option(SSG_PRODUCT_RHEL6 "If enabled, the RHEL6 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_RHEL7 "If enabled, the RHEL7 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_RHEL8 "If enabled, the RHEL8 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_RHOSP13 "If enabled, the RHOSP13 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_RHV4 "If enabled, the RHV4 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_SLE11 "If enabled, the SLE11 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_SLE12 "If enabled, the SLE12 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_UBUNTU1404 "If enabled, the Ubuntu 14.04 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_UBUNTU1604 "If enabled, the Ubuntu 16.04 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_UBUNTU1804 "If enabled, the Ubuntu 18.04 SCAP content will be built" TRUE)
-option(SSG_PRODUCT_WRLINUX "If enabled, the WRLinux SCAP content will be built" TRUE)
+option(SSG_PRODUCT_FEDORA "If enabled, the Fedora SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_FIREFOX "If enabled, the Firefox SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_FUSE6 "If enabled, the JBoss Fuse6 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_JRE "If enabled, the JRE SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_OCP3 "If enabled, the OCP3 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_OL7 "If enabled, the Oracle Linux 7 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_OL8 "If enabled, the Oracle Linux 8 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_OPENSUSE "If enabled, the openSUSE SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_RHEL6 "If enabled, the RHEL6 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_RHEL7 "If enabled, the RHEL7 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_RHEL8 "If enabled, the RHEL8 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_RHOSP13 "If enabled, the RHOSP13 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_RHV4 "If enabled, the RHV4 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_SLE11 "If enabled, the SLE11 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_SLE12 "If enabled, the SLE12 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_UBUNTU1404 "If enabled, the Ubuntu 14.04 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_UBUNTU1604 "If enabled, the Ubuntu 16.04 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_UBUNTU1804 "If enabled, the Ubuntu 18.04 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_WRLINUX8 "If enabled, the WRLinux8 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
+option(SSG_PRODUCT_WRLINUX1019 "If enabled, the WRLinux1019 SCAP content will be built" ${SSG_PRODUCT_DEFAULT})
 
 option(SSG_CENTOS_DERIVATIVES_ENABLED "If enabled, CentOS derivative content will be built from the RHEL content" TRUE)
 option(SSG_SCIENTIFIC_LINUX_DERIVATIVES_ENABLED "If enabled, Scientific Linux derivative content will be built from the RHEL content" TRUE)
@@ -104,6 +115,7 @@ find_python_module(yaml REQUIRED)
 find_python_module(jinja2 REQUIRED)
 find_python_module(pytest)
 find_python_module(pytest_cov)
+find_python_module(json2html)
 
 include(CMakeDependentOption)
 cmake_dependent_option(ENABLE_PYTHON_COVERAGE "Enable Python tests with coverage support" ON "PY_PYTEST_COV" OFF)
@@ -230,7 +242,8 @@ message(STATUS "SUSE 12: ${SSG_PRODUCT_SLE12}")
 message(STATUS "Ubuntu 14.04: ${SSG_PRODUCT_UBUNTU1404}")
 message(STATUS "Ubuntu 16.04: ${SSG_PRODUCT_UBUNTU1604}")
 message(STATUS "Ubuntu 18.04: ${SSG_PRODUCT_UBUNTU1804}")
-message(STATUS "WRLinux: ${SSG_PRODUCT_WRLINUX}")
+message(STATUS "WRLinux 8: ${SSG_PRODUCT_WRLINUX8}")
+message(STATUS "WRLinux 1019: ${SSG_PRODUCT_WRLINUX1019}")
 
 message(STATUS " ")
 
@@ -246,23 +259,21 @@ add_subdirectory("tests")
 
 # Targets 'stats', 'profile-stats' and 'zipfile' need to be added
 # before any product because they will receive dependencies from products added
+if(SSG_TARGET_OVAL_VERSION VERSION_EQUAL "5.11")
+    ssg_build_zipfile_target("scap-security-guide-${SSG_VERSION}")
+else()
+    ssg_build_zipfile_target("scap-security-guide-${SSG_VERSION}-oval-${SSG_TARGET_OVAL_VERSION}")
+endif()
 
 add_custom_target(stats)
 add_custom_target(profile-stats)
 
+add_custom_target(html-stats)
+add_custom_target(html-profile-stats)
+
 ssg_build_bash_remediation_functions()
 
 ssg_build_man_page()
-
-# ZIP only contains source datastreams and kickstarts, people who
-# want sources to build from should get the tarball instead.
-if(SSG_TARGET_OVAL_VERSION VERSION_EQUAL "5.11")
-    ssg_build_zipfile("scap-security-guide-${SSG_VERSION}")
-    ssg_build_nist_zipfile("scap-security-guide-${SSG_VERSION}")
-else()
-    ssg_build_zipfile("scap-security-guide-${SSG_VERSION}-oval-${SSG_TARGET_OVAL_VERSION}")
-    ssg_build_nist_zipfile("scap-security-guide-${SSG_VERSION}-${SSG_TARGET_OVAL_VERSION}")
-endif()
 
 if (SSG_PRODUCT_CHROMIUM)
     add_subdirectory("chromium")
@@ -330,8 +341,21 @@ endif()
 if (SSG_PRODUCT_UBUNTU1804)
     add_subdirectory("ubuntu1804")
 endif()
-if (SSG_PRODUCT_WRLINUX)
-    add_subdirectory("wrlinux")
+if (SSG_PRODUCT_WRLINUX8)
+    add_subdirectory("wrlinux8")
+endif()
+if (SSG_PRODUCT_WRLINUX1019)
+    add_subdirectory("wrlinux1019")
+endif()
+
+# ZIP only contains source datastreams and kickstarts, people who
+# want sources to build from should get the tarball instead.
+if(SSG_TARGET_OVAL_VERSION VERSION_EQUAL "5.11")
+    ssg_build_zipfile("scap-security-guide-${SSG_VERSION}")
+    ssg_build_nist_zipfile("scap-security-guide-${SSG_VERSION}-SCAP-1.3")
+else()
+    ssg_build_zipfile("scap-security-guide-${SSG_VERSION}-oval-${SSG_TARGET_OVAL_VERSION}")
+    ssg_build_nist_zipfile("scap-security-guide-${SSG_VERSION}-SCAP-1.2")
 endif()
 
 ssg_define_guide_and_table_tests()

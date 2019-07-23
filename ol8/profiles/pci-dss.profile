@@ -34,7 +34,9 @@ selections:
     - file_groupowner_etc_passwd
     - file_permissions_etc_passwd
     - file_owner_grub2_cfg
+    - file_owner_efi_grub2_cfg
     - file_groupowner_grub2_cfg
+    - file_groupowner_efi_grub2_cfg
     - package_libreswan_installed
     - set_password_hashing_algorithm_systemauth
     - set_password_hashing_algorithm_logindefs
@@ -110,7 +112,13 @@ selections:
     - display_login_attempts
     - gid_passwd_group_same
     - grub2_audit_argument
-    - smartcard_auth
+    - package_opensc_installed
+    - var_smartcard_drivers=cac
+    - configure_opensc_card_drivers
+    - force_opensc_card_drivers
+    - service_pcscd_enabled
+    - sssd_enable_smartcards
+    - package_pcsc-lite_installed
     - var_multiple_time_servers=ol
     - chronyd_or_ntpd_specify_multiple_servers
     - chronyd_or_ntpd_specify_remote_server
@@ -124,7 +132,7 @@ selections:
     - accounts_passwords_pam_faillock_deny
     - accounts_passwords_pam_faillock_unlock_time
     - account_unique_name
-    - dconf_use_text_backend
+    - dconf_db_up_to_date
     - dconf_gnome_screensaver_idle_activation_enabled
     - dconf_gnome_screensaver_idle_delay
     - dconf_gnome_screensaver_lock_enabled

@@ -42,8 +42,13 @@ selections:
     - sysctl_kernel_yama_ptrace_scope
     - sysctl_kernel_kptr_restrict
     - sysctl_kernel_kexec_load_disabled
+    - sysctl_user_max_user_namespaces
     - sysctl_kernel_dmesg_restrict
-    - dconf_use_text_backend
+    - sysctl_kernel_perf_event_paranoid
+    - sysctl_kernel_unprivileged_bpf_disabled
+    - sysctl_net_core_bpf_jit_harden
+    - sysctl_kernel_core_pattern
+    - dconf_db_up_to_date
     - dconf_gnome_screensaver_idle_activation_enabled
     - dconf_gnome_screensaver_idle_delay
     - dconf_gnome_screensaver_lock_delay
@@ -60,6 +65,7 @@ selections:
     - grub2_slub_debug_argument
     - grub2_page_poison_argument
     - grub2_vsyscall_argument
+    - grub2_pti_argument
     - no_empty_passwords
     - require_singleuser_auth
     - service_debug-shell_disabled
@@ -67,9 +73,7 @@ selections:
     - sshd_disable_root_login
     - gnome_gdm_disable_automatic_login
     - gnome_gdm_disable_guest_login
-    - sssd_offline_cred_expiration
-    - sssd_memcache_timeout
-    - var_sssd_memcache_timeout=1_day
+    - sssd_run_as_sssd_user
     - disable_host_auth
     - sshd_disable_gssapi_auth
     - sshd_disable_kerb_auth
@@ -89,6 +93,7 @@ selections:
     - set_firewalld_default_zone
     - auditd_audispd_syslog_plugin_activated
     - auditd_audispd_configure_remote_server
+    - auditd_local_events
     - rsyslog_remote_loghost
     - auditd_audispd_encrypt_sent_records
     - login_banner_text=usgcb_default
@@ -215,3 +220,12 @@ selections:
     - configure_kerberos_crypto_policy
     - configure_bind_crypto_policy
     - configure_crypto_policy
+    - chronyd_no_chronyc_network
+    - chronyd_client_only
+    - kernel_module_atm_disabled
+    - kernel_module_can_disabled
+    - kernel_module_firewire-core_disabled
+    - kernel_module_tipc_disabled
+    - dnf-automatic_apply_updates
+    - package_fapolicyd_installed
+    - dnf-automatic_security_updates_only
